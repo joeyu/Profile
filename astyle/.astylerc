@@ -1,0 +1,13 @@
+--convert-tabs
+--break-blocks
+--pad=oper
+--unpad=paren
+--indent=spaces=4
+--brackets=break
+--indent-classes 
+--indent-switches
+--indent-cases
+--indent-preprocessor
+#--max-instatement-indent
+--min-conditional-indent=0
+

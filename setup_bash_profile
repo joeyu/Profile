@@ -1,0 +1,21 @@
+#!/bin/bash
+#
+# Setup bash .profile
+
+BASH_PROFILE=$1
+SCRIPT_PATH=$(readlink -f $0)
+SCRIPT_DIR=$(dirname ${SCRIPT_PATH})
+ADDITIONAl_BASH_PROFILE=${SCRIPT_DIR}/bash_profile
+
+if [ ! -f $ADDITIONAl_BASH_PROFILE ]; then
+    echo "Warning: $ADDITIONAl_BASH_PROFILE doesn't exist!"
+fi
+
+if [ -w $BASH_PROFILE ]; then
+    echo -e "\n#Envirnment variables set by $SCRIPT_PATH">>$BASH_PROFILE
+    echo ". $ADDITIONAl_BASH_PROFILE">>$BASH_PROFILE
+
+    echo "Modified $BASH_PROFILE to include $ADDITIONAl_BASH_PROFILE"
+else
+    echo "Error: $BASH_PROFILE doesn't exist or isn't writable!"
+fi

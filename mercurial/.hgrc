@@ -1,0 +1,27 @@
+# user-specific mercurial configuration file
+# See hgrc(5) for more information
+#
+
+[ui]
+editor = vim
+username = Zhou Yu <zhou.yu@montage-tech.com>
+debug = true
+merge = kdiff3
+
+[extensions]
+#treetop = /mnt/hg_tools/treetop.py
+hgext.hgk = 
+hgext.extdiff = 
+
+#[treetop]
+#username = zyu
+#email = zhou.yu@magnumsemi.com
+
+[extdiff]
+cmd.kdiff3 =
+#The following lines specified in hgbook.pdf doesn't work
+#cmd.gvimdiff = gvim
+#opts.gvimdiff = -f ’+next’ ’+execute "DirDiff" argv(0) argv(1)’
+
+[web]
+style = gitweb

@@ -1,0 +1,25 @@
+#!/bin/bash
+if [ -z $1 ]; then
+    echo Archive a file
+    echo "Usage: $0 <file>"
+    exit 0
+fi
+if [ ! -e $1 ]; then
+    echo Error: File \'$1\' doesn\'t exist.
+    exit 1
+fi
+
+FILE_PATH=$1
+ABS_FILE_PATH=`readlink -f $FILE_PATH`
+FILE_BASENAME=`basename $ABS_FILE_PATH`
+FILE_DIRNAME=`dirname $ABS_FILE_PATH`
+
+ARCHIVE_BASENAME=${FILE_BASENAME}_`date -u +%Y-%m-%d-%H-%M-%S`UTC.tar.bz2
+ARCHIVE_PATH=$PWD/$ARCHIVE_BASENAME
+
+echo "Generating archive '$ARCHIVE_PATH'... "
+pushd .>/dev/null
+cd "$FILE_DIRNAME"
+tar -jcvf  $ARCHIVE_PATH  $FILE_BASENAME >/dev/null
+popd>/dev/null
+echo done

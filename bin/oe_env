@@ -1,0 +1,14 @@
+#!/bin/bash
+# Set up environment for openembedded
+
+if [ -n "$1" ]; then
+    OE_BASE=$1
+else
+    OE_BASE="$HOME/openembedded"
+fi
+
+if [ ! -d "$OE_BASE" ]; then
+    echo "Warning: openembedded is not found in $OE_BASE"
+fi
+
+export OE_BASE

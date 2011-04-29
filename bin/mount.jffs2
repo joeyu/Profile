@@ -1,0 +1,64 @@
+#!/bin/bash
+# mounts/umounts a jffs2 image file.
+
+# Check if we're running as root
+if [ $(id -u) != 0 ]; then
+    echo "Error: This program must be run as root"
+    exit 1;
+fi
+
+# Check if it's umount
+UMNT=""
+echo "$0" | grep umount. >/dev/null 2>&1
+if [ $? -eq 0 ]; then
+    UMNT=1
+fi
+
+if [ x"${UMNT}"x == x""x ]; then
+    JFFS2IMG=$1 # jffs2 image
+    MP=$2 # mount point
+else
+    MP=$1 # mount point
+fi
+
+if [[ x"${UMNT}"x == x""x && -f "JFFS2IMG" ]]; then
+    echo "Error: File $JFFS2IMG doesn't exist or can't be read!"
+    exit 1;
+fi
+
+if [ ! -d "$MP" ]; then
+    echo "Error: Directory $MP doesn't exist!"
+    exit 1;
+fi
+
+if [ x"${UMNT}"x = x""x ]; then
+    MTDBLOCK="/dev/mtdblock0"
+    modprobe mtdblock && \
+    modprobe mtdram total_size=65536 erase_size=256 && \
+    modprobe jffs2 && \
+    dd if=${JFFS2IMG} of=${MTDBLOCK} && \
+    mount -t jffs2 ${MTDBLOCK} ${MP}
+else
+    umount ${MP}
+    if [ $? -ne 0 ]; then
+        echo "Error: Cannot unmount JFFS2 at $MP" && exit 1
+    fi
+    modprobe -r jffs2
+    modprobe -r mtdram
+    modprobe -r mtdblock
+fi 
+
+#if [ 1 ]; then
+#if [ x"${UMNT}"x = x""x ]; then
+#    export LOOP_DEV=$(losetup -f) && \
+#    losetup $LOOP_DEV ${JFFS2IMG} && \
+#    modprobe block2mtd block2mtd=$LOOP_DEV,131072 && \
+#    sleep 2 && \
+#    modprobe jffs2 && \
+#    sleep 2 && \
+#    modprobe mtdblock && \
+#    sleep 2 && \
+#    $(dmesg | egrep "mtd[[:digit:]]:" | sed "mtd
+#    mount -t jffs2 -o ro /dev/mtdblock0 $
+#fi
+#fi

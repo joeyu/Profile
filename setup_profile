@@ -1,0 +1,52 @@
+#!/bin/bash
+#
+# Setup user profile
+
+USER_DIR=$HOME
+USER_PROFILE_DIR=$USER_DIR/Profile
+SCRIPT_PATH=$(readlink -f $0)
+SCRIPT_DIR=$(dirname ${SCRIPT_PATH})
+
+# bash .profile
+echo "Setup bash .profile"
+if [ -x $SCRIPT_DIR/setup_bash_profile ]; then
+    . $SCRIPT_DIR/setup_bash_profile "$USER_DIR/.profile"
+fi
+
+# bash .bash_aliases
+ln -sf $USER_PROFILE_DIR/bash_aliases $USER_DIR/.bash_aliases
+
+#vim
+echo "Setup vim"
+ln -sf $USER_PROFILE_DIR/vim/.vimrc $USER_DIR/.vimrc  
+ln -sf $USER_PROFILE_DIR/vim/.gvimrc $USER_DIR/.gvimrc  
+ln -sfn $USER_PROFILE_DIR/vim/.vim $USER_DIR/.vim  
+
+#mercurial
+echo "Setup mercurial"
+ln -sf $USER_PROFILE_DIR/mercurial/.hgrc $USER_DIR/.hgrc  
+
+#git
+echo "Setup git"
+ln -sf $USER_PROFILE_DIR/git/.gitconfig $USER_DIR/.gitconfig  
+
+#indent
+echo "Setup indent"
+ln -sf $USER_PROFILE_DIR/indent/.indent.pro $USER_DIR/.indent.pro  
+
+#astyle
+echo "Setup astyle"
+ln -sf $USER_PROFILE_DIR/astyle/.astylerc $USER_DIR/.astylerc  
+
+#ibus-cloud-pinyin
+echo "Setup ibus-cloud-pinyin"
+USER_CLOUD_PINYIN_PATH=$USER_DIR/.config/ibus/cloud-pinyin
+if [ ! -e $USER_CLOUD_PINYIN_PATH ]; then
+    mkdir -p $USER_CLOUD_PINYIN_PATH
+fi
+ln -sf $USER_PROFILE_DIR/ibus/cloud-pinyin/config.lua $USER_CLOUD_PINYIN_PATH/config.lua
+
+#ctags
+echo "Setup ctags"
+ln -sf $USER_PROFILE_DIR/ctags/.ctags $USER_DIR/.ctags  
+

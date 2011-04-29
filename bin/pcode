@@ -1,0 +1,4 @@
+#!/bin/sh
+
+find \( -iname '*.h' -o -iname '*.c' -o -iname '*.cpp' \) -exec astyle '{}' \;
+find \( -iname '*.h' -o -iname '*.c' -o -iname '*.cpp' \) -exec dos2unix -f '{}' \;

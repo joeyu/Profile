@@ -1,0 +1,54 @@
+#!/usr/bin/python
+
+import sys, os, os.path, struct
+
+if len(sys.argv) < 2:
+    raise "please give NFI file as argument!"
+        
+print "%s tries to unpack an NFI file and turns it into a compact flash image." % (sys.argv[0])
+
+image_fn = sys.argv[1]
+image_bn = os.path.basename(image_fn)
+image_bn = os.path.splitext(image_bn)[0]
+image_f = open(image_fn, "r")
+header = image_f.read(32)
+
+if header[:4] != "NFI1":
+    print "old NFI format detected!"
+    machine_type = "dm7020"
+    image_f.seek(0)
+else:
+    machine_type = header[4:4+header[4:].find("\0")]
+
+#endianess = {"dm7025": "1234", "dm7020": "4321"}
+
+print "machine type:", machine_type
+
+(total_size, ) = struct.unpack("!L", image_f.read(4))
+
+p = 0
+while image_f.tell() < total_size:
+    (size, ) = struct.unpack("!L", image_f.read(4))
+    
+    output_names = {1: "_2ndstagebl.gz", 2: "_boot.jffs2", 3: "_root.jffs2"}
+    if p not in output_names:
+        image_f.seek(size, 1)
+    else:
+        print "extracting", output_names[p]
+        output_filename = image_bn + output_names[p] 
+        output = open(output_filename, "wb")
+        print output_filename, " size=", size
+        for sector in range(size / 528):
+            d = image_f.read(528)
+            output.write(d[:512])
+        output.close()
+        print "unpacking", p, "(ignore errors about mknod, chown)"
+        #if os.system("./dump %s %s %s" % (output_filename, output_directory, endianess[machine_type])):
+        #    raise "unpacking jffs2 failed!"
+        #os.unlink(output_filename)
+            
+    p += 1
+
+image_f.close()
+
+
