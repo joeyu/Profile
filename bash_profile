@@ -21,7 +21,7 @@ ANDROID_SDK_HOME="/opt/android-sdk-linux_x86"
 if [ ! -d "$ANDROID_SDK_HOME" ]; then
     echo "Warning: eclipse is not found in $ANDROID_SDK_HOME"
 fi
-PATH=$ANDROID_SDK_HOME/tools:$PATH
+PATH=$$ANDROID_SDK_HOME/platform-tools:ANDROID_SDK_HOME/tools:$PATH
 
 ADOBE_AIR_SDK_HOME="/opt/AdobeAIRSDK"
 if [ ! -d "$ADOBE_AIR_SDK_HOME" ]; then
