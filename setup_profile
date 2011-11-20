@@ -40,7 +40,7 @@ ln -sf $USER_PROFILE_DIR/astyle/.astylerc $USER_DIR/.astylerc
 
 #ibus-cloud-pinyin
 echo "Setup ibus-cloud-pinyin"
-USER_CLOUD_PINYIN_PATH=$USER_DIR/.config/ibus/cloud-pinyin
+USER_CLOUD_PINYIN_PATH=${XDG_CONFIG_HOME:-$HOME/.config}/ibus/cloud-pinyin
 if [ ! -e $USER_CLOUD_PINYIN_PATH ]; then
     mkdir -p $USER_CLOUD_PINYIN_PATH
 fi

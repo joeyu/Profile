@@ -3,11 +3,11 @@ USER_DIR=$HOME
 USER_PROFILE_DIR=$USER_DIR/Profile
 
 #JDK
-export JAVA_HOME="/opt/jdk"
-if [ ! -d "$JAVA_HOME" ]; then
-    echo "Warning: JDK is not found in $JAVA_HOME"
-fi
-PATH=$JAVA_HOME/bin:$PATH
+#export JAVA_HOME="/opt/jdk"
+#if [ ! -d "$JAVA_HOME" ]; then
+#    echo "Warning: JDK is not found in $JAVA_HOME"
+#fi
+#PATH=$JAVA_HOME/bin:$PATH
 
 #Eclipse
 ECLIPSE_HOME="/opt/eclipse"
