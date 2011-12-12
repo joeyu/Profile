@@ -12,3 +12,5 @@ set_switch{
 }
 
 set_punctuation('_', "——")
+
+register_engine("Sogou", "")
