@@ -1,12 +1,12 @@
 #This file will be sourced by $HOME/.profile
 USER_PROFILE_DIR=${HOME}/Profile
 
-#JDK
-#export JAVA_HOME="/opt/jdk"
-#if [ ! -d "$JAVA_HOME" ]; then
-#    echo "Warning: JDK is not found in $JAVA_HOME"
-#fi
-#PATH=$JAVA_HOME/bin:$PATH
+JDK
+export JAVA_HOME="/opt/jdk"
+if [ ! -d "$JAVA_HOME" ]; then
+    echo "Warning: JDK is not found in $JAVA_HOME"
+fi
+PATH=$JAVA_HOME/bin:$PATH
 
 #Eclipse
 ECLIPSE_HOME="/opt/eclipse"
