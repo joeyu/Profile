@@ -28,7 +28,8 @@ ANDROID_NDK_HOME="/opt/android-ndk"
 export ANDROID_NDK_ROOT=${ANDROID_NDK_HOME}
 
 # depot tool
-PATH=$PATH:${HOME}/src/depot_tools
+DEPOT_TOOLS_HOME="/opt/depot_tools"
+PATH=$DEPOT_TOOLS_HOME:$PATH
 
 PATH=$USER_PROFILE_DIR/bin:$PATH
 
