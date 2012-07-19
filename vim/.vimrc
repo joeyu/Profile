@@ -47,6 +47,7 @@ set incsearch		" Incremental search
 "set autowrite		" Automatically save before commands like :next and :make
 "set hidden             " Hide buffers when they are abandoned
 set mouse=a		" Enable mouse usage (all modes) in terminals
+set smartindent
 
 " Source a global configuration file if available
 " XXX Deprecated, please move your changes here in /etc/vim/vimrc
