@@ -16,9 +16,9 @@ fi
 PATH=${ECLIPSE_HOME}:$PATH
 
 #Android SDK
-ANDROID_SDK_HOME="/opt/android-sdk-linux_x86"
+ANDROID_SDK_HOME="/opt/android-sdk-linux"
 if [ ! -d "$ANDROID_SDK_HOME" ]; then
-    echo "Warning: eclipse is not found in $ANDROID_SDK_HOME"
+    echo "Warning: android SDK is not found in $ANDROID_SDK_HOME"
 fi
 PATH=$ANDROID_SDK_HOME/platform-tools:$ANDROID_SDK_HOME/tools:$PATH
 #For chromium-android build
