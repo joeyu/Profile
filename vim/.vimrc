@@ -60,6 +60,7 @@ set shiftwidth=4
 set expandtab
 set nobackup
 set nu
+set smartindent
 "colorscheme torte
 
 "omnicppcomplete
@@ -75,4 +76,18 @@ filetype plugin on
 " Taglist
 nnoremap <silent> <F8> :TlistToggle<CR>
 nnoremap <silent> <F7> :NERDTree<CR>
+
+let g:jsbeautify = {'indent_size': 4, 'indent_char': '\t'}
+let g:htmlbeautify = {'indent_size': 4, 'indent_char': ' ', 'max_char': 78, 'brace_style': 'expand', 'unformatted': ['a', 'sub', 'sup', 'b', 'i', 'u']}
+let g:cssbeautify = {'indent_size': 4, 'indent_char': ' '}
+
+
+ " map <c-f> :call JsBeautify()<cr>
+  " or
+  autocmd FileType javascript noremap <buffer>  <c-f> :call JsBeautify()<cr>
+  " for html
+  autocmd FileType html noremap <buffer> <c-f> :call HtmlBeautify()<cr>
+  " for css or scss
+  autocmd FileType css noremap <buffer> <c-f> :call CSSBeautify()<cr>
+
 
