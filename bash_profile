@@ -1,7 +1,7 @@
 #This file will be sourced by $HOME/.profile
 USER_PROFILE_DIR=${HOME}/Profile
 
-JDK
+#JDK
 export JAVA_HOME="/opt/jdk"
 if [ ! -d "$JAVA_HOME" ]; then
     echo "Warning: JDK is not found in $JAVA_HOME"
@@ -16,9 +16,9 @@ fi
 PATH=${ECLIPSE_HOME}:$PATH
 
 #Android SDK
-ANDROID_SDK_HOME="/opt/android-sdk-linux_x86"
+ANDROID_SDK_HOME="/opt/android-sdk-linux"
 if [ ! -d "$ANDROID_SDK_HOME" ]; then
-    echo "Warning: eclipse is not found in $ANDROID_SDK_HOME"
+    echo "Warning: android SDK is not found in $ANDROID_SDK_HOME"
 fi
 PATH=$ANDROID_SDK_HOME/platform-tools:$ANDROID_SDK_HOME/tools:$PATH
 #For chromium-android build
@@ -31,7 +31,12 @@ export ANDROID_NDK_ROOT=${ANDROID_NDK_HOME}
 DEPOT_TOOLS_HOME="/opt/depot_tools"
 PATH=$DEPOT_TOOLS_HOME:$PATH
 
-PATH=$USER_PROFILE_DIR/bin:$PATH
+PATH=$USER_PROFILE_DIR/bin:$USER_PROFILE_DIR/ShProg4C:$PATH
+
+# gsutil
+GSUTIL_PATH="/opt/gsutil"
+PATH=$GSUTIL_PATH:$PATH
+
 
 # Local ld path
 export LD_LIBRARY_PATH=$USER_PROFILE_DIR/lib:$HOME/lib:$LD_LIBRARY_PATH
