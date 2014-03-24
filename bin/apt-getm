@@ -1,3 +1,4 @@
+#!/usr/bin/nodejs
 
 var pkgs = []; 
 var cp = require('child_process');
@@ -73,19 +74,43 @@ var download = function (pkgs) {
         console.log(data.toString());
     });
     procDownload.on('exit', function (code, signal) {
-        var procAptget = cp.spawn('sudo', ['apt-get', 'dist-upgrade', '-y']);
-
-        procAptget.stdout.on('data', function (data) {
-            console.log(data.toString);
-        });
+        verifyDownloadFiles(pkgs);
     });
 };
 
-var verifyDownloadFiles = function (i) {
-    var pkg = pkgs[i];
-    var procVerifyFile = cp.spawn('md5sum', [pkg.file], {cwd: '/var/cache/apt/archives'});
-    procVerifyFile.stdout.on('data', function (data) {
-        data.toString().split(' ')
+var verifyDownloadFiles = function (pkgs) {
+    var i;
+    var md5File = '';
+    for (i = 0; i < pkgs.length; ++ i) {
+        md5File += pkgs[i].md5 + ' ' + pkgs[i].file + '\n';
+    }
+    md5File = md5File.slice(0, -1);
+    var procVerifyFiles = cp.spawn('md5sum', ['-c'], {cwd: '/var/cache/apt/archives'});
+    var stdout = '';
+    procVerifyFiles.stdout.on('data', function (data) {
+        stdout += data.toString();
+    });
+    procVerifyFiles.on('exit', function (code, signal) {
+        var stdoutLines = stdout.split('\n');
+        var i;
+        var pkgsFailed = [];
+        for (i = 0; i < stdoutLines.length; ++ i) {
+            if (stdoutLines[i].split(': ')[1] === 'FAILED') {
+                pkgsFailed.push(pkgs[i]);
+            }
+        }
+        if (pkgsFailed) {
+            download(pkgsFailed);
+        }
+        else {
+            var procAptget = cp.spawn('sudo', ['apt-get', 'dist-upgrade', '-y']);
+
+            procAptget.stdout.on('data', function (data) {
+                console.log(data.toString);
+            });
+        }
+    });
+        
 }
 
 

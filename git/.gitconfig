@@ -9,3 +9,5 @@
 	deltaBaseCacheLimit = 1G
 [push]
 	default = simple
+[http]
+[http]
