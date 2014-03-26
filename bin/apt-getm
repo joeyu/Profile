@@ -1,61 +1,127 @@
 #!/usr/bin/nodejs
 
-var pkgs = []; 
 var cp = require('child_process');
-var procAptgetPrinturis = cp.spawn('sudo', ['apt-get', 'dist-upgrade', '-qq', '--print-uris']);
+var fs = require('fs');
 
-procAptgetPrinturis.stdout.on('data', function (data) {
-    var stdout = data.toString().split('\n');
-    var i;
-    for (i = 0; i < stdout.length - 1; i ++) {
-        var token = stdout[i].split(' '); 
-        pkgs[i] = {
-            uri:  token[0].slice(1, -1),
-            file: decodeURI(token[1]), 
-            size: parseInt(token[2]),
-            md5:  token[3].split(':')[1]
-        }; 
+if (process.getuid() != 0) {
+    console.log("[ERROR] Please run this program as 'root'!");
+    process.exit(1);
+}
+
+if (process.argv.length == 2) {
+    process.exit(0);
+}
+
+var argv = process.argv;
+var cmd = {};
+var isCmdToken = false;
+for (var i = 2; i < argv.length; ++ i) {
+    if (argv[i] === 'dist-upgrade') {
+        cmd.cmd = 'dist-upgrade';
     }
-});
-
-
-procAptgetPrinturis.on('exit', function (code, signal) {
-    if (code != 0 && !signal) {
-        console.log('[ERROR] exit: ' + code);
-        return code;
+    else if (argv[i] === 'install') {
+        cmd.cmd = 'install';
+        isCmdToken = true;
     }
-    //console.log(pkgs);
-    removeOldFiles(pkgs);
-
-});
-
-var removeOldFiles = function (pkgs) {
-    var i;
-    var cmdLine = ['rm', '-f'];
-    for (i = 0; i < pkgs.length; ++ i) {
-        cmdLine.push(pkgs[i].file);
+    else if (argv[i][0] === '-') {
+        cmd.options.push(argv[i]);
+        isCmdToken = false; 
     }
-    console.log(cmdLine.join(' '));
-    var procRemoveOldFiles = cp.spawn('sudo', cmdLine, {cwd: '/var/cache/apt/archives'});
-    procRemoveOldFiles.on('exit', function (code, signal) {
-        download(pkgs);
+    else {
+        if (isCmdToken) { 
+           cmd.args.push(argv[i]);
+        }
+        else {
+            console.log("[ERROR] wrong command arguments");
+            process.exit(1);
+        }
+    }
+}
+if (cmd.cmd == 'install' && cmd.options.length == 0) {
+    console.log("[ERROR] wrong 'install' command arguments");
+    process.exit(1);
+}
+    
+
+aptgetPrinturis(cmd);
+
+function aptgetPrinturis (cmd) {
+    var pkgs = []; 
+
+    var cmdargs = [];
+    if (cmd.cmd === 'install') {
+        cmdargs = ['install'];
+        cmdargs.concat(cmd.options);
+    }
+    else if (cmd.cmd === 'dist-upgrade') {
+        cmdargs = ['dist-upgrade'];
+    }
+    else {
+        invokeAptget();
+        process.exit(0);
+    }
+    cmdargs.push('-qq', '--print-uris');
+
+    var procAptgetPrinturis = cp.spawn('apt-get', cmdargs);
+    var stdout = '';
+
+    procAptgetPrinturis.stdout.on('data', function (data) {
+        stdout += data.toString();
     });
-};
 
+    procAptgetPrinturis.on('exit', function (code, signal) {
+        if (!signal) {
+            if (code) {
+                console.log('[ERROR] exit: ' + code);
+                return code;
+            }
+            else {
+                stdout.split('\n').forEach(function (e) {
+                    if (!e) return;
+                    var token = e.split(' '); 
+                    //console.log("[DEBUG] token=" + token);
+                    pkgs.push({
+                        uri:  token[0].slice(1, -1),
+                        file: token[1],
+                        size: parseInt(token[2]),
+                        md5:  token[3].split(':')[1]
+                    }); 
+                });
+                //console.log("[DEBUG] " + pkgs.length);
+                if (pkgs.length) {
+                    removeOldFiles(pkgs);
+                }
+                else {
+                    invokeAptget();
+                }
+            }
+        }
+    });
+}
 
-
-var download = function (pkgs) {
+function removeOldFiles (pkgs) {
     var i;
-    var uris = [];
-    var size = 0;
-    for (i = 0; i < pkgs.length; ++ i) {
-        uris.push(pkgs[i].uri);
-        size += pkgs[i].size;
-    }
-    var cmdLine = ['axel', '-n', (size / 50000).toFixed().toString()];
-    cmdLine = cmdLine.concat(uris);
-    console.log(cmdLine.join(' '));
-    var procDownload = cp.spawn('sudo', cmdLine, {cwd: '/var/cache/apt/archives'});
+    console.log("[INFO] Removing the follwing package files:");
+    pkgs.forEach(function (e) {
+        var filePath = '/var/cache/apt/archives/' + e.file; 
+        if (fs.existsSync(filePath)) {
+            fs.unlink(filePath, function (err) {
+                if (err) console.log("[ERROR] " + err);
+            });
+            console.log("[INFO]     " + e.file);
+        }
+    });
+    download(pkgs, pkgs.length - 1);
+}
+
+
+
+function download (pkgs, i) {
+    var nDownload = (pkgs[i].size / 100000 + 1).toFixed();
+    if (nDownload > 64) nDownload = 64;
+    var cmdLine = ['-o', pkgs[i].file, '-n', nDownload.toString(), pkgs[i].uri];
+    console.log("[INFO] " + "Downloading package... '" + "axel " + cmdLine.join(' ') + "'");
+    var procDownload = cp.spawn('axel', cmdLine, {cwd: '/var/cache/apt/archives'});
     var logLine = '';
     procDownload.stdout.on('data', function (data) {
         var s = data.toString();
@@ -71,47 +137,56 @@ var download = function (pkgs) {
         }
     });
     procDownload.stderr.on('data', function (data) {
-        console.log(data.toString());
+        console.log("[ERROR][axel] "+ data.toString());
     });
     procDownload.on('exit', function (code, signal) {
-        verifyDownloadFiles(pkgs);
-    });
-};
-
-var verifyDownloadFiles = function (pkgs) {
-    var i;
-    var md5File = '';
-    for (i = 0; i < pkgs.length; ++ i) {
-        md5File += pkgs[i].md5 + ' ' + pkgs[i].file + '\n';
-    }
-    md5File = md5File.slice(0, -1);
-    var procVerifyFiles = cp.spawn('md5sum', ['-c'], {cwd: '/var/cache/apt/archives'});
-    var stdout = '';
-    procVerifyFiles.stdout.on('data', function (data) {
-        stdout += data.toString();
-    });
-    procVerifyFiles.on('exit', function (code, signal) {
-        var stdoutLines = stdout.split('\n');
-        var i;
-        var pkgsFailed = [];
-        for (i = 0; i < stdoutLines.length; ++ i) {
-            if (stdoutLines[i].split(': ')[1] === 'FAILED') {
-                pkgsFailed.push(pkgs[i]);
+        if (!signal) { // program exits normally
+            if (code) { // w/ error, re-download it
+                download(pkgs, i);
+            }
+            else { // w/o error
+                // check the md5sum
+                var md5File = pkgs[i].md5 + ' *' + pkgs[i].file;
+                var procVerifyFiles = cp.spawn('md5sum', ['-c', '--status'], {cwd: '/var/cache/apt/archives'});
+                procVerifyFiles.stdin.write(md5File);
+                procVerifyFiles.stdin.end();
+                procVerifyFiles.on('exit', function (code, signal) {
+                    if (!signal) { // program exits normally
+                        if (code) { // w/ error, re-download it
+                            console.log("[ERROR] " + "md5sum verification failed for '" + md5File + "'");
+                            //remove the bad one
+                            var filePath = '/var/cache/apt/archives/' + pkgs[i].file; 
+                            if (fs.existSync(filePath)) {
+                                fs.unlink(filePath, function (err) {
+                                    if (err) console.log("[ERROR] " + err);
+                                });
+                            }
+                            download(pkgs, i);
+                        }
+                        else { // md5sum succeeded
+                            console.log("[INFO] " + "md5sum verification succeeded for '" + pkgs[i].file + "'");
+                            if (i != 0) { // Download next
+                                download(pkgs, i - 1);
+                            }
+                            else { // all download succeed, run the apt-get command
+                                console.log("[INFO] All downloaded packages are verified successfully! Now install it!");
+                                invokeAptget();
+                            }
+                        }
+                    }
+                });
             }
         }
-        if (pkgsFailed) {
-            download(pkgsFailed);
-        }
-        else {
-            var procAptget = cp.spawn('sudo', ['apt-get', 'dist-upgrade', '-y']);
-
-            procAptget.stdout.on('data', function (data) {
-                console.log(data.toString);
-            });
-        }
     });
-        
 }
+
+function invokeAptget () {
+    var procAptget = cp.spawn('apt-get', process.argv.slice(2));
+
+    procAptget.stdout.on('data', function (data) {
+        console.log(data.toString());
+    });
+};
 
 
 
