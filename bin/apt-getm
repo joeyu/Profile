@@ -13,22 +13,26 @@ if (process.argv.length == 2) {
 }
 
 var argv = process.argv;
-var cmd = {};
-var isCmdToken = false;
+var cmd = {
+    cmd: undefined,
+    args: [],
+    options: []
+};
+var isArgsToken = false;
 for (var i = 2; i < argv.length; ++ i) {
     if (argv[i] === 'dist-upgrade') {
         cmd.cmd = 'dist-upgrade';
     }
     else if (argv[i] === 'install') {
         cmd.cmd = 'install';
-        isCmdToken = true;
+        isArgsToken = true;
     }
     else if (argv[i][0] === '-') {
         cmd.options.push(argv[i]);
-        isCmdToken = false; 
+        isArgsToken = false; 
     }
     else {
-        if (isCmdToken) { 
+        if (isArgsToken) { 
            cmd.args.push(argv[i]);
         }
         else {
@@ -37,10 +41,10 @@ for (var i = 2; i < argv.length; ++ i) {
         }
     }
 }
-if (cmd.cmd == 'install' && cmd.options.length == 0) {
-    console.log("[ERROR] wrong 'install' command arguments");
-    process.exit(1);
-}
+//if (cmd.cmd == 'install' && cmd.args.length == 0) {
+//    console.log("[ERROR] wrong 'install' command arguments");
+//    process.exit(1);
+//}
     
 
 var dl = {
@@ -70,7 +74,7 @@ function aptgetPrinturis (cmd) {
         invokeAptget();
         process.exit(0);
     }
-    cmdargs.push('-qq', '--print-uris');
+    cmdargs.push('-qq', '--print-uris', '-f');
 
     var procAptgetPrinturis = cp.spawn('apt-get', cmdargs, {stdio: [process.stdin, 'pipe', process.stderr]});
     var stdout = '';
@@ -210,6 +214,7 @@ function downloadOnePkg (dl, i, isRedownload) {
 }
 
 function invokeAptget () {
+    console.log("[DEBUG] command 'apt-get " + process.argv.slice(2) + "'");
     var procAptget = cp.spawn('apt-get', process.argv.slice(2), {stdio: 'inherit'});
 };
 
