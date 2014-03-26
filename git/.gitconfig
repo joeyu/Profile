@@ -1,8 +1,8 @@
 [color]
 	ui = auto
 [user]
-	name = Joe Yu
-	email = joe.yu@arm.com
+	name = Zhou Yu
+	email = nap.zhou.yu@gmail.com
 [core]
 	autocrlf = false
 	filemode = false
