@@ -43,6 +43,16 @@ if (cmd.cmd == 'install' && cmd.options.length == 0) {
 }
     
 
+var dl = {
+    sizeTotal: 0,
+    sizeComplete: 0,
+    nThreads: 0,
+    nThreadsMax: 64,
+    nPkgs: 0,
+    iPkgNext: 0,
+    pkgs: null
+};
+
 aptgetPrinturis(cmd);
 
 function aptgetPrinturis (cmd) {
@@ -86,10 +96,14 @@ function aptgetPrinturis (cmd) {
                         size: parseInt(token[2]),
                         md5:  token[3].split(':')[1]
                     }); 
+                    dl.sizeTotal += parseInt(token[2]);
                 });
+                dl.nPkgs = pkgs.length;
+                dl.pkgs = pkgs;
                 //console.log("[DEBUG] " + pkgs.length);
-                if (pkgs.length) {
-                    removeOldFiles(pkgs);
+                if (dl.nPkgs) {
+                    removeOldFiles(dl.pkgs);
+                    download(dl);
                 }
                 else {
                     invokeAptget();
@@ -111,15 +125,37 @@ function removeOldFiles (pkgs) {
             console.log("[INFO]     " + e.file);
         }
     });
-    download(pkgs, pkgs.length - 1);
 }
 
 
+function download (dl) {
+    console.log("[INFO] Completed download: %d (%d\%)", dl.sizeComplete, parseInt(dl.sizeComplete * 100 / dl.sizeTotal));
+    // invoke as many download threads as 'nThreadMax'
+    for (; dl.nThreads < dl.nThreadsMax && dl.iPkgNext < dl.nPkgs; ++ dl.iPkgNext) {
+        downloadOnePkg(dl, dl.iPkgNext, false);
+    }
+    console.log("[DEBUG] 'dl.nThreads = %d, dl.iPkgNext = %d", dl.nThreads, dl.iPkgNext);
 
-function download (pkgs, i) {
-    var nDownload = (pkgs[i].size / 100000 + 1).toFixed();
-    if (nDownload > 64) nDownload = 64;
-    var cmdLine = ['-o', pkgs[i].file, '-n', nDownload.toString(), pkgs[i].uri];
+    // wait 500ms for some empty thread slots
+    if (dl.iPkgNext < dl.nPkgs || dl.nThreads) {
+        setTimeout(download, 500, dl);
+    }
+    else { // all downloads succeed, run the apt-get command
+        console.log("[INFO] All downloaded packages are verified successfully! Now install it!");
+        invokeAptget();
+    }
+}
+ 
+
+function downloadOnePkg (dl, i, isRedownload) {
+    var pkg = dl.pkgs[i];
+    var nThreads = parseInt(pkg.size / 100000) + 1;
+    if (nThreads > dl.nThreadsMax / 2) nThreads = parseInt(dl.nThreadsMax / 2);
+    if (!isRedownload) {
+        dl.nThreads += nThreads;
+        //console.log("[DEBUG] 'nThreadsTotal += nThreads;' nThreadsTotal = %d, i = %d", nThreadsTotal ,i);
+    }
+    var cmdLine = ['-o', pkg.file, '-n', nThreads.toString(), pkg.uri, '-a'];
     console.log("[INFO] " + "Downloading package... '" + "axel " + cmdLine.join(' ') + "'");
     var procDownload = cp.spawn('axel', cmdLine, {cwd: '/var/cache/apt/archives', stdio: 'inherit'});
     //var logLine = '';
@@ -136,17 +172,14 @@ function download (pkgs, i) {
     //        logLine += s;
     //    }
     //});
-    //procDownload.stderr.on('data', function (data) {
-    //    console.log("[ERROR][axel] "+ data.toString());
-    //});
     procDownload.on('exit', function (code, signal) {
         if (!signal) { // program exits normally
             if (code) { // w/ error, re-download it
-                download(pkgs, i);
+                download(dl, i, true);
             }
             else { // w/o error
                 // check the md5sum
-                var md5File = pkgs[i].md5 + ' *' + pkgs[i].file;
+                var md5File = pkg.md5 + ' *' + pkg.file;
                 var procVerifyFiles = cp.spawn('md5sum', ['-c', '--status'], {cwd: '/var/cache/apt/archives', stdio: ['pipe', 'ignore', process.stderr]});
                 procVerifyFiles.stdin.write(md5File);
                 procVerifyFiles.stdin.end();
@@ -155,23 +188,19 @@ function download (pkgs, i) {
                         if (code) { // w/ error, re-download it
                             console.log("[ERROR] " + "md5sum verification failed for '" + md5File + "'");
                             //remove the bad one
-                            var filePath = '/var/cache/apt/archives/' + pkgs[i].file; 
+                            var filePath = '/var/cache/apt/archives/' + pkg.file; 
                             if (fs.existSync(filePath)) {
                                 fs.unlink(filePath, function (err) {
                                     if (err) console.log("[ERROR] " + err);
                                 });
                             }
-                            download(pkgs, i);
+                            downloadOnePkg(dl, i, true);
                         }
                         else { // md5sum succeeded
-                            console.log("[INFO] " + "md5sum verification succeeded for '" + pkgs[i].file + "'");
-                            if (i != 0) { // Download next
-                                download(pkgs, i - 1);
-                            }
-                            else { // all download succeed, run the apt-get command
-                                console.log("[INFO] All downloaded packages are verified successfully! Now install it!");
-                                invokeAptget();
-                            }
+                            console.log("[INFO] " + "md5sum verification succeeded for '" + pkg.file + "'");
+                            dl.nThreads -= nThreads; //release thread slots
+                            dl.sizeComplete += pkg.size;
+                            //console.log("[DEBUG] 'nThreadsTotal -= nThreads;' nThreadsTotal = %d, i = %d", nThreadsTotal ,i);
                         }
                     }
                 });
