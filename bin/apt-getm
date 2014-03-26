@@ -62,7 +62,7 @@ function aptgetPrinturis (cmd) {
     }
     cmdargs.push('-qq', '--print-uris');
 
-    var procAptgetPrinturis = cp.spawn('apt-get', cmdargs);
+    var procAptgetPrinturis = cp.spawn('apt-get', cmdargs, {stdio: [process.stdin, 'pipe', process.stderr]});
     var stdout = '';
 
     procAptgetPrinturis.stdout.on('data', function (data) {
@@ -121,24 +121,24 @@ function download (pkgs, i) {
     if (nDownload > 64) nDownload = 64;
     var cmdLine = ['-o', pkgs[i].file, '-n', nDownload.toString(), pkgs[i].uri];
     console.log("[INFO] " + "Downloading package... '" + "axel " + cmdLine.join(' ') + "'");
-    var procDownload = cp.spawn('axel', cmdLine, {cwd: '/var/cache/apt/archives'});
-    var logLine = '';
-    procDownload.stdout.on('data', function (data) {
-        var s = data.toString();
-        var n = s.lastIndexOf('\n');
-        // Print what prior to a new-line
-        if (n != -1) {
-            logLine += s.slice(0, n);
-            console.log(logLine);
-            logLine = s.slice(n + 1);
-        }
-        else {
-            logLine += s;
-        }
-    });
-    procDownload.stderr.on('data', function (data) {
-        console.log("[ERROR][axel] "+ data.toString());
-    });
+    var procDownload = cp.spawn('axel', cmdLine, {cwd: '/var/cache/apt/archives', stdio: 'inherit'});
+    //var logLine = '';
+    //procDownload.stdout.on('data', function (data) {
+    //    var s = data.toString();
+    //    var n = s.lastIndexOf('\n');
+    //    // Print what prior to a new-line
+    //    if (n != -1) {
+    //        logLine += s.slice(0, n);
+    //        console.log(logLine);
+    //        logLine = s.slice(n + 1); // '' if s[-1] === '\n'
+    //    }
+    //    else {
+    //        logLine += s;
+    //    }
+    //});
+    //procDownload.stderr.on('data', function (data) {
+    //    console.log("[ERROR][axel] "+ data.toString());
+    //});
     procDownload.on('exit', function (code, signal) {
         if (!signal) { // program exits normally
             if (code) { // w/ error, re-download it
@@ -147,7 +147,7 @@ function download (pkgs, i) {
             else { // w/o error
                 // check the md5sum
                 var md5File = pkgs[i].md5 + ' *' + pkgs[i].file;
-                var procVerifyFiles = cp.spawn('md5sum', ['-c', '--status'], {cwd: '/var/cache/apt/archives'});
+                var procVerifyFiles = cp.spawn('md5sum', ['-c', '--status'], {cwd: '/var/cache/apt/archives', stdio: ['pipe', 'ignore', process.stderr]});
                 procVerifyFiles.stdin.write(md5File);
                 procVerifyFiles.stdin.end();
                 procVerifyFiles.on('exit', function (code, signal) {
@@ -181,11 +181,7 @@ function download (pkgs, i) {
 }
 
 function invokeAptget () {
-    var procAptget = cp.spawn('apt-get', process.argv.slice(2));
-
-    procAptget.stdout.on('data', function (data) {
-        console.log(data.toString());
-    });
+    var procAptget = cp.spawn('apt-get', process.argv.slice(2), {stdio: 'inherit'});
 };
 
 
