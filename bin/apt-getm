@@ -133,7 +133,7 @@ function removeOldFiles (pkgs) {
 
 
 function download (dl) {
-    console.log("[INFO] Completed download: %d (%d\%)", dl.sizeComplete, parseInt(dl.sizeComplete * 100 / dl.sizeTotal));
+    console.log("[INFO] Completed download: %dBytes (%d\%)", dl.sizeComplete, parseInt(dl.sizeComplete * 100 / dl.sizeTotal));
     // invoke as many download threads as 'nThreadMax'
     for (; dl.nThreads < dl.nThreadsMax && dl.iPkgNext < dl.nPkgs; ++ dl.iPkgNext) {
         downloadOnePkg(dl, dl.iPkgNext, false);
