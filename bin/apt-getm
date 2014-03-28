@@ -45,6 +45,8 @@ for (var i = 2; i < argv.length; ++ i) {
 //    console.log("[ERROR] wrong 'install' command arguments");
 //    process.exit(1);
 //}
+console.log("[DEBUG] " + JSON.stringify(cmd));
+//process.exit(0);
     
 
 var dl = {
@@ -62,21 +64,22 @@ aptgetPrinturis(cmd);
 function aptgetPrinturis (cmd) {
     var pkgs = []; 
 
-    var cmdargs = [];
+    var aptargs = [];
     if (cmd.cmd === 'install') {
-        cmdargs = ['install'];
-        cmdargs.concat(cmd.options);
+        aptargs = ['install'];
+        aptargs = aptargs.concat(cmd.args).concat(cmd.options);
     }
     else if (cmd.cmd === 'dist-upgrade') {
-        cmdargs = ['dist-upgrade'];
+        aptargs = ['dist-upgrade'];
     }
     else {
         invokeAptget();
         process.exit(0);
     }
-    cmdargs.push('-qq', '--print-uris', '-f');
+    aptargs.push('-qq', '--print-uris');
+    //console.log("[DEBUG] 'apt-get %s'", aptargs.join(' '));
 
-    var procAptgetPrinturis = cp.spawn('apt-get', cmdargs, {stdio: [process.stdin, 'pipe', process.stderr]});
+    var procAptgetPrinturis = cp.spawn('apt-get', aptargs, {stdio: [process.stdin, 'pipe', process.stderr]});
     var stdout = '';
 
     procAptgetPrinturis.stdout.on('data', function (data) {
