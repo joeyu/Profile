@@ -1,7 +1,10 @@
-#!/usr/bin/nodejs
+#!/usr/bin/env nodejs
 
 var cp = require('child_process');
 var fs = require('fs');
+var util = require('util');
+var url = require('url');
+var http = require('http');
 
 if (process.getuid() != 0) {
     console.log("[ERROR] Please run this program as 'root'!");
@@ -145,7 +148,7 @@ function download (dl) {
 
     // wait 500ms for some empty thread slots
     if (dl.iPkgNext < dl.nPkgs || dl.nThreads) {
-        setTimeout(download, 500, dl);
+        setTimeout(download, 1000, dl);
     }
     else { // all downloads succeed, run the apt-get command
         console.log("[INFO] All downloaded packages are verified successfully! Now install it!");
@@ -157,7 +160,9 @@ function download (dl) {
 function downloadOnePkg (dl, i, isRedownload) {
     var pkg = dl.pkgs[i];
     var nThreads = parseInt(pkg.size / 100000) + 1;
-    if (nThreads > dl.nThreadsMax / 2) nThreads = parseInt(dl.nThreadsMax / 2);
+    if (nThreads + dl.nThreads > dl.nThreadsMax) {
+        nThreads = dl.nThreadsMax - dl.nThreads;
+    }
     if (!isRedownload) {
         dl.nThreads += nThreads;
         //console.log("[DEBUG] 'nThreadsTotal += nThreads;' nThreadsTotal = %d, i = %d", nThreadsTotal ,i);
