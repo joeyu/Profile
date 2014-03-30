@@ -53,13 +53,15 @@ console.log("[DEBUG] " + JSON.stringify(cmd));
     
 
 var dl = {
+    destDir: '/var/cache/apt/archives',
     sizeTotal: 0,
     sizeComplete: 0,
+    sizeThread: 100000,
     nThreads: 0,
     nThreadsMax: 64,
+    pkgs: [],
     nPkgs: 0,
-    iPkgNext: 0,
-    pkgs: null
+    iPkgNext: 0
 };
 
 aptgetPrinturis(cmd);
@@ -112,7 +114,7 @@ function aptgetPrinturis (cmd) {
                 dl.pkgs = pkgs;
                 //console.log("[DEBUG] " + pkgs.length);
                 if (dl.nPkgs) {
-                    removeOldFiles(dl.pkgs);
+                    removeOldFiles(dl);
                     download(dl);
                 }
                 else {
@@ -123,11 +125,10 @@ function aptgetPrinturis (cmd) {
     });
 }
 
-function removeOldFiles (pkgs) {
-    var i;
+function removeOldFiles (dl) {
     console.log("[INFO] Removing the follwing package files:");
-    pkgs.forEach(function (e) {
-        var filePath = '/var/cache/apt/archives/' + e.file; 
+    dl.pkgs.forEach(function (e) {
+        var filePath = dl.destDir + e.file; 
         if (fs.existsSync(filePath)) {
             fs.unlink(filePath, function (err) {
                 if (err) console.log("[ERROR] " + err);
@@ -159,66 +160,89 @@ function download (dl) {
 
 function downloadOnePkg (dl, i, isRedownload) {
     var pkg = dl.pkgs[i];
-    var nThreads = parseInt(pkg.size / 100000) + 1;
+    var nThreads = parseInt(pkg.size / dl.sizeThread) + 1;
     if (nThreads + dl.nThreads > dl.nThreadsMax) {
         nThreads = dl.nThreadsMax - dl.nThreads;
     }
     if (!isRedownload) {
         dl.nThreads += nThreads;
-        //console.log("[DEBUG] 'nThreadsTotal += nThreads;' nThreadsTotal = %d, i = %d", nThreadsTotal ,i);
     }
-    var cmdLine = ['-o', pkg.file, '-n', nThreads.toString(), pkg.uri, '-a'];
-    console.log("[INFO] " + "Downloading package... '" + "axel " + cmdLine.join(' ') + "'");
-    var procDownload = cp.spawn('axel', cmdLine, {cwd: '/var/cache/apt/archives', stdio: 'inherit'});
-    //var logLine = '';
-    //procDownload.stdout.on('data', function (data) {
-    //    var s = data.toString();
-    //    var n = s.lastIndexOf('\n');
-    //    // Print what prior to a new-line
-    //    if (n != -1) {
-    //        logLine += s.slice(0, n);
-    //        console.log(logLine);
-    //        logLine = s.slice(n + 1); // '' if s[-1] === '\n'
-    //    }
-    //    else {
-    //        logLine += s;
-    //    }
-    //});
-    procDownload.on('exit', function (code, signal) {
-        if (!signal) { // program exits normally
-            if (code) { // w/ error, re-download it
-                download(dl, i, true);
-            }
-            else { // w/o error
-                // check the md5sum
-                var md5File = pkg.md5 + ' *' + pkg.file;
-                var procVerifyFiles = cp.spawn('md5sum', ['-c', '--status'], {cwd: '/var/cache/apt/archives', stdio: ['pipe', 'ignore', process.stderr]});
-                procVerifyFiles.stdin.write(md5File);
-                procVerifyFiles.stdin.end();
-                procVerifyFiles.on('exit', function (code, signal) {
-                    if (!signal) { // program exits normally
-                        if (code) { // w/ error, re-download it
-                            console.log("[ERROR] " + "md5sum verification failed for '" + md5File + "'");
-                            //remove the bad one
-                            var filePath = '/var/cache/apt/archives/' + pkg.file; 
-                            if (fs.existSync(filePath)) {
-                                fs.unlink(filePath, function (err) {
-                                    if (err) console.log("[ERROR] " + err);
-                                });
-                            }
-                            downloadOnePkg(dl, i, true);
-                        }
-                        else { // md5sum succeeded
-                            console.log("[INFO] " + "md5sum verification succeeded for '" + pkg.file + "'");
-                            dl.nThreads -= nThreads; //release thread slots
-                            dl.sizeComplete += pkg.size;
-                            //console.log("[DEBUG] 'nThreadsTotal -= nThreads;' nThreadsTotal = %d, i = %d", nThreadsTotal ,i);
-                        }
-                    }
+
+    //downloadOnePkgByAxel(nThreads);
+    downloadOnePkgByNode(nThreads);
+
+    function downloadOnePkgByNode(nThreads) {
+            multiThreadedHttpGet(
+                pkg.uri, 
+                pkg.file, 
+                nThreads, 
+                function (destFile, size, nThreadsRemained) {
+                    dl.nThreads -= (nThreads - nThreadsRemained);
+                    console.log("[INFO] '%s': %d%", destFile, parseInt(size * 100 / pkg.size));
                 });
+    }
+
+    // Downloand function using 'axel'
+    function downloadOnePkgByAxel(nThreads) {
+        var cmdLine = ['-o', pkg.file, '-n', nThreads.toString(), pkg.uri, '-a'];
+        console.log("[INFO] Downloading package... 'axel %s'", cmdLine.join(' '));
+        var procDownload = cp.spawn(
+            'axel', 
+            cmdLine, 
+            {cwd: dl.destDir, stdio: 'inherit'});
+        //var logLine = '';
+        //procDownload.stdout.on('data', function (data) {
+        //    var s = data.toString();
+        //    var n = s.lastIndexOf('\n');
+        //    // Print what prior to a new-line
+        //    if (n != -1) {
+        //        logLine += s.slice(0, n);
+        //        console.log(logLine);
+        //        logLine = s.slice(n + 1); // '' if s[-1] === '\n'
+        //    }
+        //    else {
+        //        logLine += s;
+        //    }
+        //});
+        procDownload.on('exit', function (code, signal) {
+            if (!signal) { // program exits normally
+                if (code) { // w/ error, re-download it
+                    download(dl, i, true);
+                }
+                else { // w/o error
+                    // check the md5sum
+                    var md5File = pkg.md5 + ' *' + pkg.file;
+                    var procVerifyFiles = cp.spawn(
+                        'md5sum', 
+                        ['-c', '--status'], 
+                        {cwd: dl.destDir, stdio: ['pipe', 'ignore', process.stderr]});
+                    procVerifyFiles.stdin.write(md5File);
+                    procVerifyFiles.stdin.end();
+                    procVerifyFiles.on('exit', function (code, signal) {
+                        if (!signal) { // program exits normally
+                            if (code) { // w/ error, re-download it
+                                console.log("[ERROR] " + "md5sum verification failed for '" + md5File + "'");
+                                //remove the bad one
+                                var filePath = dl.destDir + pkg.file; 
+                                if (fs.existSync(filePath)) {
+                                    fs.unlink(filePath, function (err) {
+                                        if (err) console.log("[ERROR] " + err);
+                                    });
+                                }
+                                downloadOnePkg(dl, i, true);
+                            }
+                            else { // md5sum succeeded
+                                console.log("[INFO] " + "md5sum verification succeeded for '" + pkg.file + "'");
+                                dl.nThreads -= nThreads; //release thread slots
+                                dl.sizeComplete += pkg.size;
+                                //console.log("[DEBUG] 'nThreadsTotal -= nThreads;' nThreadsTotal = %d, i = %d", nThreadsTotal ,i);
+                            }
+                        }
+                    });
+                }
             }
-        }
-    });
+        });
+    }
 }
 
 function invokeAptget () {
@@ -227,4 +251,99 @@ function invokeAptget () {
 };
 
 
+function multiThreadedHttpGet(srcUrl, destPath, nThreads, callback) {
+    //console.log("[DEBUG] srcUrl: %s, destPath: %s, nThreads: %d", srcUrl, destPath, nThreads);
+    var url = require('url');
+    var urlObj = url.parse(srcUrl);
 
+    var options = {
+          hostname: urlObj.hostname,
+          port:urlObj.port, 
+          path: urlObj.path,
+          method: 'HEAD'
+    };
+
+    http.request(options, function(res) {
+        //console.log('STATUS: ' + res.statusCode);
+        //console.log('HEADERS: ' + util.inspect(res.headers, {colors: true}));
+        if (res.statusCode != 200) {
+            console.log("[ERROR] HTTP 'HEAD' error code: " + res.statusCode);
+            exit(1);
+        }
+        if (res.headers['accept-ranges'] !== 'bytes') {
+            console.log("[ERROR] HTTP partial 'GET' is not supported! " + util.inspect(res.headers, {colors: true}));
+            exit(1);
+        }
+        var sizeFile = res.headers['content-length'];
+        options.method = 'GET';
+
+        var threads = new Array(nThreads);
+        threads.forEach(function (e) {
+            e = {bufs: [], size: 0, finised: false};
+        });
+
+        var start = 0;
+        var step = sizeFile / nThreads;
+        var last = sizeFile % nThreads;
+        if (last) {
+            step = parseInt(step) + 1;
+        }
+        var i = 0;
+        while (start + step < sizeFile) {
+            getPartialFile(i, start, start + step - 1);
+            start += step;
+            i ++;
+        }
+        if (last) {
+            getPartialFile(i, start, sizeFile - 1);
+        }
+
+        (function timerCallback () {
+            var size = 0;
+            if (threads.every(function (e) {return e.finished;})) { // GOT all
+                var bufs = threads.map(function (e) {
+                    var buf = Buffer.concat(e.bufs, e.size);
+                    size += e.size;
+                    return buf;
+                });
+                var bufFile = Buffer.concat(bufs, size);
+                var fd = createWritableStream(destPath);
+                fd.write(bufFile);
+                fd.end();
+            }
+            else {
+                threads.forEarch(function (e) {
+                    size += e.size;
+                });
+
+                callback(destPath, size, nThreads);
+
+                setTimeout(timerCallback, 1000);
+            }
+        })();
+    }).on('error', function(e) {
+        console.log("[ERROR] Problem with http 'HEAD' request: " + e.message);
+    }).end();
+    
+    function getPartialFile (i, start, end) {
+        var req = http.request(options, function(res) {
+            if (res.statusCode != 206) {
+                console.log("[ERROR] HTTP partial 'GET' failed! " + util.inspect(res.headers, {colors: true}));
+                exit(1);
+            }
+            res.on('data', function (chunk) {
+                var t = threads[i];
+                t.bufs.push(chunk);
+                t.size += chunk.length; 
+
+            }).on('end', function() {
+                var t = threads[i];
+                t.finished = true;
+                nThreads --;
+            });
+
+        });
+        req.setHeader('range', 'bytes=' + start + '-' + end);
+        req.end();
+    }
+}
