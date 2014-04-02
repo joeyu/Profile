@@ -4,10 +4,10 @@ var url = require('url');
 var http = require('http');
 var events = require('events');
 
-modules.exports = threadedGet;
+module.exports.threadedGet = threadedGet;
 
 function threadedGet(srcUrl, destPath, nThreads, md5sum, callback) {
-    return new ThreadedGetor(srcUrl, destPath, nThreads, md5sum, callback);
+    return new ThreadedGetter(srcUrl, destPath, nThreads, md5sum, callback);
 }
 
 function ThreadedGetter(srcUrl, destPath, nThreads, md5sum, callback) {
@@ -37,7 +37,7 @@ function ThreadedGetter(srcUrl, destPath, nThreads, md5sum, callback) {
         t.sizeGot += chunk.length; 
         self.sizeGot += chunk.length;
         //console.log("chunk: size: %d", t.size);
-    }).on('thread_finished') {
+    }).on('thread_finished', function (i) {
         var t = self.threads[i];
         t.finished = true;
         self.nThreads --;
@@ -47,7 +47,7 @@ function ThreadedGetter(srcUrl, destPath, nThreads, md5sum, callback) {
         }
 
         //console.log(t);
-    }).on('all_threads_finished') {
+    }).on('all_threads_finished', function () {
         var bufs = self.threads.map(function (e) {
             var buf = Buffer.concat(e.bufs, e.sizeGot);
             return buf;
@@ -126,6 +126,6 @@ function ThreadedGetter(srcUrl, destPath, nThreads, md5sum, callback) {
     }
 }
 
-util.inherit(ThreadedGetter, events.EventEmitter);
+util.inherits(ThreadedGetter, events.EventEmitter);
 
 
