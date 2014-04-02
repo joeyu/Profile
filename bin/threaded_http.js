@@ -110,7 +110,7 @@ function ThreadedGetter(srcUrl, destPath, nThreads, md5sum, callback) {
                 res.on('data', function (chunk) {
                     self.emit('thread_data', i, chunk);
                 }).on('end', function() {
-                    self.emit('thead_finished', i);
+                    self.emit('thread_finished', i);
                 });
             });
             req.setHeader('range', 'bytes=' + start + '-' + end);
