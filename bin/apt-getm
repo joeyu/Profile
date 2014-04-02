@@ -58,7 +58,7 @@ var dl = {
     sizeComplete: 0,
     sizeThread: 100000,
     nThreads: 0,
-    nThreadsMax: 2,
+    nThreadsMax: 64,
     pkgs: [],
     nPkgs: 0,
     iPkgNext: 0
@@ -81,7 +81,7 @@ function aptgetPrinturis (cmd) {
         invokeAptget();
         process.exit(0);
     }
-    aptargs.push('-qq', '--print-uris');
+    aptargs.push('-qq', '--print-uris', '-f');
     //console.log("[DEBUG] 'apt-get %s'", aptargs.join(' '));
 
     var procAptgetPrinturis = cp.spawn('apt-get', aptargs, {stdio: [process.stdin, 'pipe', process.stderr]});
@@ -168,8 +168,8 @@ function downloadOnePkg (dl, i, isRedownload) {
         dl.nThreads += nThreads;
     }
 
-    //downloadOnePkgByAxel(nThreads);
-    downloadOnePkgByNode(nThreads);
+    downloadOnePkgByAxel(nThreads);
+    //downloadOnePkgByNode(nThreads);
 
     function downloadOnePkgByNode(nThreads) {
             multiThreadedHttpGet(
@@ -320,11 +320,11 @@ function multiThreadedHttpGet(srcUrl, destPath, nThreads, callback) {
                 threads.forEach(function (e) {
                     size += e.size;
                 });
-                console.log("threads size: %d", size);
+                //console.log("threads size: %d", size);
 
                 callback(destPath, size, nThreads);
 
-                setTimeout(timerCallback, 1000);
+                setTimeout(timerCallback, 3000);
             }
         })();
 
