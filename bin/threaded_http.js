@@ -6,11 +6,11 @@ var events = require('events');
 
 modules.exports = threadedGet;
 
-function threadedGet(srcUrl, destPath, nThreads, md5sum) {
-    return new ThreadedGetor(srcUrl, destPath, nThreads, md5sum);
+function threadedGet(srcUrl, destPath, nThreads, md5sum, callback) {
+    return new ThreadedGetor(srcUrl, destPath, nThreads, md5sum, callback);
 }
 
-function ThreadedGetter(srcUrl, destPath, nThreads, md5sum) {
+function ThreadedGetter(srcUrl, destPath, nThreads, md5sum, callback) {
     this.url = srcUrl;
     this.destPath = destPath;
     this.nThreads = nThreads;
@@ -28,6 +28,7 @@ function ThreadedGetter(srcUrl, destPath, nThreads, md5sum) {
           path: urlObj.path,
           method: 'HEAD'
     };
+    this.callback = callback;
 
     self = this;
     self.on('thread_data', function (i, chunk) {
@@ -57,6 +58,8 @@ function ThreadedGetter(srcUrl, destPath, nThreads, md5sum) {
         fd.write(bufFile);
         fd.end();
     });
+
+    self.callback(self);
 
     http.request(options, function(res) {
         //console.log('STATUS: ' + res.statusCode);
