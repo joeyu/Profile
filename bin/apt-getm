@@ -2,6 +2,7 @@
 
 var cp = require('child_process');
 var fs = require('fs');
+var path = require('path');
 var util = require('util');
 var url = require('url');
 //var http = require('http');
@@ -146,15 +147,15 @@ function download (dl) {
     for (; dl.nThreads < dl.nThreadsMax && dl.iPkgNext < dl.nPkgs; ++ dl.iPkgNext) {
         downloadOnePkg(dl, dl.iPkgNext, false);
     }
-    console.log("[DEBUG] 'dl.nThreads = %d, dl.iPkgNext = %d", dl.nThreads, dl.iPkgNext);
+    console.log("[DEBUG] 'dl.nThreads = %d, dl.iPkgNext = %d, dl.nPkgs = %d", dl.nThreads, dl.iPkgNext, dl.nPkgs);
 
-    // wait 500ms for some empty thread slots
-    if (dl.iPkgNext < dl.nPkgs || dl.nThreads) {
-        setTimeout(download, 5000, dl);
-    }
-    else { // all downloads succeed, run the apt-get command
+    if (dl.iPkgNext === dl.nPkgs && dl.nThreads === 0) {
         console.log("[INFO] All downloaded packages are verified successfully! Now install it!");
         invokeAptget();
+    }
+    else { 
+        // wait 5000ms
+        setTimeout(download, 5000, dl);
     }
 }
  
@@ -165,31 +166,34 @@ function downloadOnePkg (dl, i, isRedownload) {
     if (nThreads + dl.nThreads > dl.nThreadsMax) {
         nThreads = dl.nThreadsMax - dl.nThreads;
     }
-    if (!isRedownload) {
-        dl.nThreads += nThreads;
-    }
+    dl.nThreads += nThreads;
 
     //downloadOnePkgByAxel(nThreads);
     downloadOnePkgByNode(nThreads);
 
     function downloadOnePkgByNode(nThreads) {
-            threaded_http.threadedGet(
-                pkg.uri, 
-                pkg.file, 
-                nThreads, 
-                pkg.md5,
-                function (th) {
-                    th.on('thread_data', function (i, chunk) {
-                        dl.sizeGot += chunk.length;
-                        console.log("[INFO] Package file '%s': %d% (%dBytes), Total: %d% (%dBytes)", th.destPath, parseInt(th.sizeGot * 100 / th.size), th.size, parseInt(dl.sizeGot * 100 / dl.size), dl.size);
-                    }).on('thread_finished', function (i) {
-                        console.log("[INFO] Package file '%s' download thread %d completed", th.destPath, i);
-                        nThreads --;
-                    }).on('all_threads_finished', function () {
-                        console.log("[INFO] Package file '%s' download completed", th.destPath);
-                    });
-                }
-            );
+        threaded_http.threadedGet(
+            pkg.uri, 
+            path.join(dl.destDir, pkg.file), 
+            nThreads, 
+            pkg.md5,
+            function (th) {
+                th.on('thread_data', function (i, chunk) {
+                    dl.sizeGot += chunk.length;
+                    console.log("[INFO] Package file '%s': %d% (%dBytes), Total: %d% (%dBytes)", th.destPath, parseInt(th.sizeGot * 100 / th.size), th.size, parseInt(dl.sizeGot * 100 / dl.size), dl.size);
+                }).on('thread_error', function (i, sizeFlush) {
+                    dl.sizeGot -= sizeFlush;
+                }).on('thread_end', function (i) {
+                    console.log("[INFO] Package file '%s' download thread %d completed", th.destPath, i);
+                    dl.nThreads --;
+                }).on('error', function (errCode, sizeFlush) {
+                    dl.sizeGot -= sizeFlush;
+                    dl.nThreads += nThreads;
+                }).on('end', function () {
+                    console.log("[INFO] Package file '%s' download completed", th.destPath);
+                });
+            }
+        );
     }
 
     // Downloand function using 'axel'
@@ -220,7 +224,7 @@ function downloadOnePkg (dl, i, isRedownload) {
                                 console.log("[ERROR] " + "md5sum verification failed for '" + md5File + "'");
                                 //remove the bad one
                                 var filePath = dl.destDir + pkg.file; 
-                                if (fs.existSync(filePath)) {
+                                if (fs.existsSync(filePath)) {
                                     fs.unlink(filePath, function (err) {
                                         if (err) console.log("[ERROR] " + err);
                                     });
