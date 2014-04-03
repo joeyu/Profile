@@ -68,7 +68,7 @@ function ThreadedGetter(srcUrl, destPath, nThreads, md5sum, callback) {
         if (res.statusCode != 200) {
             if (res.statusCode == 302 || res.statusCode == 303) {
                 self.url = res.headers['location'];
-                console.log(["[INFO] Redirected to %s", self.url);
+                console.log("[INFO] Redirected to %s", self.url);
                 var urlDirectObj = url.parse(self.url);
                 var options = {
                       hostname: urlDirectObj.hostname,
@@ -132,7 +132,6 @@ function ThreadedGetter(srcUrl, destPath, nThreads, md5sum, callback) {
                 getPartialFile(i, start, self.size - 1);
             }
 
-            // Start
             function getPartialFile (i, start, end) {
                 var urlObj = url.parse(self.url);
                 var options = {
