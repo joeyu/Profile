@@ -47,7 +47,7 @@ function ThreadedGetter(srcUrl, destPath, nThreads, md5sum, callback) {
         t.finished = true;
         //self.nThreads --;
         if (areAllThreadsFinished()) {
-            self.emit('_end');
+            self.emit('_download_finished');
         }
         self.emit('thread_end', i);
     }).on('_error', function (errCode) {
@@ -59,13 +59,12 @@ function ThreadedGetter(srcUrl, destPath, nThreads, md5sum, callback) {
         });
         var sizeFlush = self.sizeGot;
         self.sizeGot = 0;
-        self.sendqueue.push({name: 'error', param1: errCode, param2: sizeFlush});
-    }).on('_end', function () {
+        self.emit('error', errCode, sizeFlush);
+    }).on('_download_finished', function () {
         var bufs = self.threads.map(function (e) {
             var buf = Buffer.concat(e.bufs, e.sizeGot);
             return buf;
         });
-        //console.log("[DEBUG] bufs.length: %d, size: %d", bufs.length, size);
         var bufFile = Buffer.concat(bufs, self.sizeGot);
         var fd = fs.createWriteStream(destPath);
         fd.write(bufFile);
@@ -78,7 +77,8 @@ function ThreadedGetter(srcUrl, destPath, nThreads, md5sum, callback) {
             }
             else {
                 console.log("[ERROR] File '%s' md5sum check failed", self.destPath);
-                self.emit('_error', -1);
+                process.exit(0);
+                //self.emit('_error', -1);
             }
         });
     });
@@ -168,9 +168,13 @@ function ThreadedGetter(srcUrl, destPath, nThreads, md5sum, callback) {
 
     (function () {
         var msg;
-        var end = false;
+        //process the message queue
         while (msg = self.sendqueue.shift()) {
             self.emit(msg.name, msg.param1, msg.param2);
+            if (msg.name === 'end') {
+                self.sendqueue = [];
+                break;
+            }
         }
         if (!self.end) {
             for (var i = 0; i < self.threads.length; ++ i) {
@@ -223,12 +227,14 @@ function ThreadedGetter(srcUrl, destPath, nThreads, md5sum, callback) {
         procVerifyFiles.on('exit', function (code, signal) {
             if (!signal) { // program exits normally
                 if (code) { // w/ error, re-download it
+                    //process.exit(0);
                     //remove the bad one
-                    if (fs.existsSync(self.destPath)) {
-                        fs.unlink(self.destPath, function (err) {
-                            if (err) console.log("[ERROR] " + err);
-                        });
-                    }
+                    //if (fs.existsSync(self.destPath)) {
+                    //    fs.unlink(self.destPath, function (err) {
+                    //        if (err) console.log("[ERROR] " + err);
+                    //    });
+                    //}
+                    console.log('fuck: %s', md5File);
                     callback(-1);
                 }
                 else { // md5sum succeeded
