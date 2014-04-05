@@ -60,7 +60,7 @@ var dl = {
     sizeGot: 0,
     sizeThread: 100000,
     nThreads: 0,
-    nThreadsMax: 64,
+    nThreadsMax: 256,
     pkgs: [],
     nPkgs: 0,
     iPkgNext: 0
@@ -117,6 +117,11 @@ function aptgetPrinturis (cmd) {
                 //console.log("[DEBUG] " + pkgs.length);
                 if (dl.nPkgs) {
                     removeOldFiles(dl);
+                    console.log("[INFO] Downloading the following files:");
+                    var hrs = threaded_http.hrs;
+                    for (var i = 0; i < dl.nPkgs; i ++) {
+                        console.log("%d) %s: %s", i, dl.pkgs[i].file, hrs(dl.pkgs[i].size));
+                    }
                     download(dl);
                 }
                 else {
@@ -147,7 +152,7 @@ function download (dl) {
     for (; dl.nThreads < dl.nThreadsMax && dl.iPkgNext < dl.nPkgs; ++ dl.iPkgNext) {
         downloadOnePkg(dl, dl.iPkgNext, false);
     }
-    console.log("[DEBUG] 'dl.nThreads = %d, dl.iPkgNext = %d, dl.nPkgs = %d", dl.nThreads, dl.iPkgNext, dl.nPkgs);
+    //console.log("[DEBUG] 'dl.nThreads = %d, dl.iPkgNext = %d, dl.nPkgs = %d", dl.nThreads, dl.iPkgNext, dl.nPkgs);
 
     if (dl.iPkgNext === dl.nPkgs && dl.nThreads === 0) {
         console.log("[INFO] All downloaded packages are verified successfully! Now install it!");
@@ -171,18 +176,32 @@ function downloadOnePkg (dl, i, isRedownload) {
     //downloadOnePkgByAxel(nThreads);
     downloadOnePkgByNode(nThreads);
 
+    var hrs = threaded_http.hrs;
+    var per = threaded_http.per;
+    var StopWatch = threaded_http.StopWatch; 
+    var print = threaded_http.print;
+    var sw = new StopWatch();
+
     function downloadOnePkgByNode(nThreads) {
         threaded_http.threadedGet(
             pkg.uri, 
             path.join(dl.destDir, pkg.file), 
             nThreads, 
             pkg.md5,
+            true,
             function (th) {
                 th.on('thread_data', function (i, chunk) {
                     dl.sizeGot += chunk.length;
-                    console.log("[INFO] Package file '%s': %d% (%dBytes), Total: %d% (%dBytes)", th.destPath, parseInt(th.sizeGot * 100 / th.size), th.size, parseInt(dl.sizeGot * 100 / dl.size), dl.size);
-                }).on('thread_error', function (i, sizeFlush) {
-                    dl.sizeGot -= sizeFlush;
+                    print.lp("[INFO] Package file: '%s' [%s, %d%], Total: [%s, %d%] Speed: %s/s", 
+                        th.destPath, 
+                        hrs(th.size), 
+                        per(th.sizeGot, th.size), 
+                        hrs(dl.size), 
+                        per(dl.sizeGot, dl.size),
+                        hrs(dl.sizeGot/sw.stop('second')));
+                }).on('thread_error', function (i, errCode) {
+                    //dl.sizeGot -= sizeFlush;
+                    console.log("[ERROR] Thread %d, error code: %s", i, errCode);
                 }).on('thread_end', function (i) {
                     console.log("[INFO] Package file '%s' download thread %d completed", th.destPath, i);
                     dl.nThreads --;
