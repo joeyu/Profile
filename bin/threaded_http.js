@@ -71,17 +71,19 @@ function ThreadedGetter(srcUrl, destPath, nThreads, md5sum, retry, callback) {
         fd.write(bufFile);
         fd.end();
         fd.on('finish', function () {
-            checkmd5sum(function (status) {
-                if (status === 0) { 
-                    console.log("[INFO] File '%s' md5sum check succeeded", self.destPath);
-                    self.end = true;
-                    self.sendqueue.push(['end']);
-                }
-                else {
-                    console.log("[ERROR] File '%s' md5sum check failed", self.destPath);
-                    self.emit('_error', 'E_MD5SUM');
-                }
-            });
+            if (self.md5sum) {
+                checkmd5sum(function (status) {
+                    if (status === 0) { 
+                        console.log("[INFO] File '%s' md5sum check succeeded", self.destPath);
+                        self.end = true;
+                        self.sendqueue.push(['end']);
+                    }
+                    else {
+                        console.log("[ERROR] File '%s' md5sum check failed", self.destPath);
+                        self.emit('_error', 'E_MD5SUM');
+                    }
+                });
+            }
         });
     });
 
@@ -109,12 +111,19 @@ function ThreadedGetter(srcUrl, destPath, nThreads, md5sum, retry, callback) {
                       method: 'HEAD'
                 }
                 var req = http.request(options, function (res) {
+                    if (res.statusCode != 200) {
+                        cosole.log("[ERROR] Failed to get directed url: %s", self.url);
+                        return re.statusCode;
+                    }
                     getPrepare(res);
-                }).on('error', function (e) {
+                });
+                req.setTimeout(self.requestTimeout, function () {
+                    console.log("[ERROR] %s", 'E_REQUEST_SOCKET_TIMEOUT');
+                });
+                req.on('error', function (e) {
                     console.log("[ERROR] Problem with http 'HEAD' request: " + e.message);
                     return res.statusCode;
                 }).end();
-                req.setTimeout(10000);
             }
             else {
                 console.log("[ERROR] HTTP 'HEAD' error code: %d", res.statusCode);
@@ -156,24 +165,24 @@ function ThreadedGetter(srcUrl, destPath, nThreads, md5sum, retry, callback) {
                 start += step;
             }
             if (last) {
-                self.threads.push(
-                    {
-                        request: null,
-                        start: start,
-                        end: self.size - 1,
-                        bufs: [], 
-                        sizeGot: 0, 
-                        running: false,
-                        finised: false
-                    });
+                self.threads.push({
+                    request: null,
+                    start: start,
+                    end: self.size - 1,
+                    bufs: [], 
+                    sizeGot: 0, 
+                    running: false,
+                    finised: false
+                });
             }
         }
-    }).on('socket', function(s) {
-        s.setTimeout(1000);
-    }).on('error', function(e) {
-        console.log("[ERROR] Problem with http 'HEAD' request: " + e.message);
+    });
+    req.setTimeout(self.requestTimeout, function () {
+        console.log("[ERROR] %s", 'E_REQUEST_SOCKET_TIMEOUT');
+    });
+    req.on('error', function(e) {
+        console.log("[ERROR]  Problem with http 'HEAD' request: " + e.message);
     }).end();
-    //req.setTimeout(10000);
 
     (function () {
         var msg;

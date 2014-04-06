@@ -5,8 +5,8 @@ var threaded_http = require('./threaded_http.js');
 
 var argv = process.argv;
 var urlSrc = argv[2];
-var md5sum = argv[3];
-var nThreads = argv[4];
+var nThreads = argv[3] ? argv[3] : 32;
+var md5sum = argv[4];
 var isRetry = argv[5] === '-r'? true : false;
 var pathDst = path.basename(url.parse(urlSrc).pathname);
 
@@ -24,7 +24,7 @@ threaded_http.threadedGet(urlSrc, pathDst, nThreads, md5sum, isRetry,
         }).on('thread_end', function (i) {
             console.log("[INFO] file '%s' download thread %d completed", th.destPath, i);
         }).on('error', function (i) {
-            console.log("[error] file '%s' download failed, restarting...", th.destPath);
+            console.log("[ERROR] file '%s' download failed, restarting...", th.destPath);
         }).on('end', function () {
             console.log("[INFO] file '%s' download completed", th.destPath);
             process.exit(0);
