@@ -1,0 +1,39 @@
+#!/usr/bin/env nodejs
+
+var fs = require('fs');
+var path = require('path');
+var colors = require('colors');
+
+if (process.argv.length < 3) {
+    process.exit(0);
+}
+
+var src = new RegExp(process.argv[2]);
+var dst = process.argv[3];
+var isDryrun = process.argv[4] === '-d';
+
+
+//console.log(filelist);
+console.log(src);
+console.log(dst);
+
+recursive('./');
+function recursive (dir) {
+    var files = fs.readdirSync(dir);
+    files.forEach(function (f) {
+        var fpath = path.join(dir, f);
+        var stat = fs.statSync(fpath);
+        if (stat.isDirectory()) {
+            recursive(fpath);
+        }
+        if (src.test(f)) {
+            var fpath2  = path.join(dir, f.replace(src, dst));
+            //console.log(f);
+            if (!isDryrun) {
+                fs.renameSync(fpath, fpath2);
+            }
+            console.log("%s --> %s", fpath.green, fpath2.yellow);
+        }
+    });
+}
+
