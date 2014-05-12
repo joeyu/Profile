@@ -8,32 +8,77 @@ if (process.argv.length < 3) {
     process.exit(0);
 }
 
-var src = new RegExp(process.argv[2]);
 var dst = process.argv[3];
-var isDryrun = process.argv[4] === '-d';
+var isDryrun = false;
+var modifiers = '';
+var i;
+for (i = 4; i < process.argv.length; ++ i) {
+    switch (process.argv[i]) {
+        case '-d':
+            isDryrun = true;
+            break;
+        default:
+            modifiers = process.argv[i];
+            break;
+    }
+}
+var src = new RegExp(process.argv[2], modifiers);
+
 
 
 //console.log(filelist);
 console.log(src);
 console.log(dst);
 
-recursive('./');
-function recursive (dir) {
+bmv('./', src, dst);
+function bmv(dir, src, dst) {
+    traverse(dir, function (fpath) {
+        var basename = path.basename(fpath);
+        var dirname = path.dirname(fpath);
+        var basename2 = basename.replace(src, dst)
+        if (basename2 !== basename) {
+            var fpath2  = path.join(dirname, basename2);
+            if (!isDryrun) {
+                fs.renameSync(fpath, fpath2);
+            }
+            // colorful log
+            var m;
+            var s1 = '', s2 = ''; 
+            var i = 0;
+            var colorDst = dst.yellow;
+            while (m = src.exec(basename)) {
+                console.log(m, src.lastIndex);
+                s1 += basename.slice(i, m.index);
+                s1 += m[0].green;
+                s2 += basename.slice(i, m.index);    
+                s2  += colorDst;
+                i = src.lastIndex;
+                if (modifiers.search('g') < 0) {
+                    break;
+                }
+            }
+            if (i < basename.length) {
+                s1 += basename.slice(i);
+                s2 += basename.slice(i);
+            }
+            
+            s1 = path.join(dirname, s1);
+            s2 = path.join(dirname, s2);
+            //console.log("%s --> %s", fpath.green, fpath2.yellow);
+            console.log("%s --> %s", s1, s2);
+        }
+    });
+};
+
+function traverse(dir, callback) {
     var files = fs.readdirSync(dir);
     files.forEach(function (f) {
         var fpath = path.join(dir, f);
         var stat = fs.statSync(fpath);
         if (stat.isDirectory()) {
-            recursive(fpath);
+            traverse(fpath, callback);
         }
-        if (src.test(f)) {
-            var fpath2  = path.join(dir, f.replace(src, dst));
-            //console.log(f);
-            if (!isDryrun) {
-                fs.renameSync(fpath, fpath2);
-            }
-            console.log("%s --> %s", fpath.green, fpath2.yellow);
-        }
+        callback(fpath);
     });
 }
 
