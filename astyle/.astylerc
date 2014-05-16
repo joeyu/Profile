@@ -1,7 +1,7 @@
 --convert-tabs
 --break-blocks
---pad=oper
---unpad=paren
+--pad-oper
+--unpad-paren
 --indent=spaces=4
 --brackets=break
 --indent-classes 
