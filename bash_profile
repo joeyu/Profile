@@ -35,8 +35,18 @@ PATH=$USER_PROFILE_DIR/bin:$USER_PROFILE_DIR/ShProg4C:$PATH
 
 # gsutil
 GSUTIL_PATH="/opt/gsutil"
+if [ ! -d "$GSUTIL_PATH" ]; then
+    echo "Warning: gsutil is not found in $GSUTIL_PATH"
+fi
 PATH=$GSUTIL_PATH:$PATH
+
+# cuda
+CUDA_PATH="/usr/local/cuda"
+if [ ! -d "$CUDA_PATH" ]; then
+    echo "Warning: cuda is not found in $CUDA_PATH"
+fi
+PATH=$CUDA_PATH/bin:$PATH
 
 
 # Local ld path
-export LD_LIBRARY_PATH=$USER_PROFILE_DIR/lib:$HOME/lib:$LD_LIBRARY_PATH
+export LD_LIBRARY_PATH=$USER_PROFILE_DIR/lib:$HOME/lib:$CUDA_PATH/lib:$LD_LIBRARY_PATH
