@@ -45,7 +45,7 @@ kmake () {
             [ $? ] && read -p "make O=${O} V=${V} -j16 modules [y/n]?" || return
             [ x${REPLY} == x'y' ] &&  make O=${O} V=${V} -j16 modules || return
             [ $? ] && read -p "make O=${O} V=${V} modules_install INSTALL_MOD_PATH=./ [y/n]?" || return
-            [ x${REPLY} == x'y' ] &&  make V=${V} modules_install INSTALL_MOD_PATH=./ || return
+            [ x${REPLY} == x'y' ] &&  make O=${O} V=${V} modules_install INSTALL_MOD_PATH=./ || return
             [ $? ] && read -p "make O=${O} V=${V} -j16 ${DT} [y/n]?" || return
             [ x${REPLY} == x'y' ] &&  make O=${O} V=${V} -j16 ${DT} || return
             ;;
