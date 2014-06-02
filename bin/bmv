@@ -4,7 +4,8 @@ var fs = require('fs');
 var path = require('path');
 var colors = require('colors');
 
-if (process.argv.length < 3) {
+if (process.argv.length < 4) {
+    console.log("usage: %s <src> <dst> [regex_modifier] [-d]", path.basename(process.argv[1])); 
     process.exit(0);
 }
 

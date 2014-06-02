@@ -4,6 +4,9 @@ var url = require('url');
 var threaded_http = require('./threaded_http.js');
 
 var argv = process.argv;
+if (argv.length < 3) {
+    console.log("tget <file_url> [#_of_threads] [-r]");
+}
 var urlSrc = argv[2];
 var nThreads = argv[3] ? argv[3] : 32;
 var md5sum = argv[4];
