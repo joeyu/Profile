@@ -4,7 +4,7 @@ export CROSS_COMPILE=/usr/bin/arm-linux-gnueabihf-
 
 
 CONFIG=arndale_ubuntu_defconfig
-kconfig () {
+lkconfig () {
     [ x$1 != x ] && CONFIG=$1
     make mrproper
     scripts/kconfig/merge_config.sh linaro/configs/linaro-base.conf  linaro/configs/distribution.conf linaro/configs/arndale.conf linaro/configs/lt-arndale.conf
@@ -15,7 +15,7 @@ kconfig () {
 O=../build/linux-linaro-tracking/linux-linaro 
 V=0
 DT=exynos5250-arndale.dtb
-kmake () { 
+lkmake () { 
     [ $? ] || return
     case x$1 in 
         x'defconfig'    )
@@ -62,7 +62,7 @@ save_ () {
         ssh -n ${T} mv $1 $1$2
     fi
 }
-kinstall () {
+lkinstall () {
     # Get the version and timestamp of the target uImage 
     X=$(ssh -n ${T} mkimage -l ${T_UDIR}/uImage); [ $? ] || return
     echo ${T}:${T_UDIR}/uImage
