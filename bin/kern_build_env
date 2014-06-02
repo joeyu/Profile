@@ -1,0 +1,87 @@
+#!/bin/bash
+export ARCH=arm
+export CROSS_COMPILE=/usr/bin/arm-linux-gnueabihf-
+
+
+CONFIG=arndale_ubuntu_defconfig
+kconfig () {
+    [ x$1 != x ] && CONFIG=$1
+    make mrproper
+    scripts/kconfig/merge_config.sh linaro/configs/linaro-base.conf  linaro/configs/distribution.conf linaro/configs/arndale.conf linaro/configs/lt-arndale.conf
+    cp .config arch/arm/configs/${CONFIG}
+    make mrproper
+}
+
+O=../build/linux-linaro-tracking/linux-linaro 
+V=0
+DT=exynos5250-arndale.dtb
+kmake () { 
+    [ $? ] || return
+    case x$1 in 
+        x'defconfig'    )
+            echo make O=${O} V=${V} ${CONFIG} 
+            make O=${O} V=${V} ${CONFIG} || return $?
+            ;; 
+        x'uImage'       )
+            echo make O=${O} V=${V} -j16 uImage
+            make O=${O} V=${V} -j16 uImage || return $?
+            ;; 
+        x'modules'      )
+            echo make O=${O} V=${V} -j16 modules 
+            make O=${O} V=${V} -j16 modules || return $?
+            ;;
+        x'modules_install'      )
+            echo make O=${O} V=${V} modules_install INSTALL_MOD_PATH=./
+            make O=${O} V=${V} modules_install INSTALL_MOD_PATH=./ || return $?
+            ;; 
+        x'dt'           )
+            echo make O=${O} V=${V} -j16 ${DT} 
+            make O=${O} V=${V} -j16 ${DT} || return $?
+            ;; 
+        x               )
+            make O=${O} V=${V} ${CONFIG} || return $?
+            read -p "make O=${O} V=${V} -j16 uImage [y/n]?"
+            [ x${REPLY} == x'y' ] &&  make O=${O} V=${V} -j16 uImage || return
+            [ $? ] && read -p "make O=${O} V=${V} -j16 modules [y/n]?" || return
+            [ x${REPLY} == x'y' ] &&  make O=${O} V=${V} -j16 modules || return
+            [ $? ] && read -p "make O=${O} V=${V} modules_install INSTALL_MOD_PATH=./ [y/n]?" || return
+            [ x${REPLY} == x'y' ] &&  make V=${V} modules_install INSTALL_MOD_PATH=./ || return
+            [ $? ] && read -p "make O=${O} V=${V} -j16 ${DT} [y/n]?" || return
+            [ x${REPLY} == x'y' ] &&  make O=${O} V=${V} -j16 ${DT} || return
+            ;;
+    esac
+}
+
+T=root@192.168.1.99
+T_UDIR=/media/mmcblk1p2 
+T_MDIR=/lib/modules
+save_ () {
+    X=$(ssh -n ${T} "if [ -f $1$2 ]; then echo existed; fi"); [ $? ] || return $?
+    if [ x$X != x'existed' ]; then
+        echo "Backup '$1' to '$1$2' at '${T}'"
+        ssh -n ${T} mv $1 $1$2
+    fi
+}
+kinstall () {
+    # Get the version and timestamp of the target uImage 
+    X=$(ssh -n ${T} mkimage -l ${T_UDIR}/uImage); [ $? ] || return
+    echo ${T}:${T_UDIR}/uImage
+    echo $X
+    #X=($(echo $X | gawk '{if (NR <= 2) {sub(/(Image Name:\s+Linux-|Created:\s+)/, ""); print}}'))
+    Y=(${X})
+    T_KVER=${Y[2]#Linux-}
+    T_KTIMESTAMP=$(date -d "$(printf '%s ' ${Y[@]:4:5})" +%Y-%m-%d-%H-%M-%S)
+
+    # If no backup exists, backup
+    save_ ${T_UDIR}/uImage _${T_KVER}_${T_KTIMESTAMP}
+    scp ${O}/arch/arm/boot/uImage ${T}:${T_UDIR}
+
+    save_ ${T_UDIR}/board.dtb _${T_KVER}_${T_KTIMESTAMP}
+    scp ${O}/arch/arm/boot/dts/${DT} ${T}:${T_UDIR}/board.dtb
+
+    save_ ${T_MDIR}/${T_KVER} _${T_KTIMESTAMP}
+    rsync -r ${O}/lib/modules/ ${T}:${T_MDIR}/
+}
+    
+
+
