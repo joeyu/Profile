@@ -4,14 +4,14 @@
 
 [ui]
 editor = vim
-username = Zhou Yu <zhou.yu@montage-tech.com>
+username = Zhou Yu <nap.zhou.yu@gmail.com>
 debug = true
 merge = kdiff3
 
 [extensions]
 #treetop = /mnt/hg_tools/treetop.py
-hgext.hgk = 
-hgext.extdiff = 
+#hgext.hgk = 
+#hgext.extdiff = 
 
 #[treetop]
 #username = zyu
