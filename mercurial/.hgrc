@@ -9,6 +9,7 @@ debug = true
 
 [extensions]
 extdiff = 
+hgk = 
 
 [extdiff]
 cmd.kdiff3 =
