@@ -6,22 +6,12 @@
 editor = vim
 username = Zhou Yu <nap.zhou.yu@gmail.com>
 debug = true
-merge = kdiff3
 
 [extensions]
-#treetop = /mnt/hg_tools/treetop.py
-#hgext.hgk = 
-#hgext.extdiff = 
-
-#[treetop]
-#username = zyu
-#email = zhou.yu@magnumsemi.com
+extdiff = 
 
 [extdiff]
 cmd.kdiff3 =
-#The following lines specified in hgbook.pdf doesn't work
-#cmd.gvimdiff = gvim
-#opts.gvimdiff = -f ’+next’ ’+execute "DirDiff" argv(0) argv(1)’
 
 [web]
 style = gitweb
