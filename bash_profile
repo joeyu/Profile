@@ -1,6 +1,13 @@
 #This file will be sourced by $HOME/.profile
 USER_PROFILE_DIR=${HOME}/Profile
 
+source $USER_PROFILE_DIR/os.sh
+
+if [[ "$OS" == "darwin" ]]; then
+    alias ls="ls -G"
+    alias ll="ls -la"
+fi
+
 #JDK
 #export JAVA_HOME="/opt/jdk"
 #if [ ! -d "$JAVA_HOME" ]; then

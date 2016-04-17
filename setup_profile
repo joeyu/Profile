@@ -2,9 +2,11 @@
 #
 # Setup user profile
 
+source os.sh
+
 USER_DIR=$HOME
 USER_PROFILE_DIR=$USER_DIR/Profile
-SCRIPT_PATH=$(readlink -f $0)
+SCRIPT_PATH=$(${GNU}readlink -f $0)
 SCRIPT_DIR=$(dirname ${SCRIPT_PATH})
 
 # bash .profile
