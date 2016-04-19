@@ -16,11 +16,11 @@ fi
 #PATH=$JAVA_HOME/bin:$PATH
 
 #Eclipse
-ECLIPSE_HOME="/opt/eclipse"
-if [ ! -d "$ECLIPSE_HOME" ]; then
-    echo "Warning: eclipse is not found in $ECLIPSE_HOME"
-fi
-PATH=${ECLIPSE_HOME}:$PATH
+#ECLIPSE_HOME="/opt/eclipse"
+#if [ ! -d "$ECLIPSE_HOME" ]; then
+#    echo "Warning: eclipse is not found in $ECLIPSE_HOME"
+#fi
+#PATH=${ECLIPSE_HOME}:$PATH
 
 #Android SDK
 ANDROID_SDK_HOME="/opt/android-sdk-linux_x86"
@@ -41,18 +41,18 @@ PATH=$DEPOT_TOOLS_HOME:$PATH
 PATH=$USER_PROFILE_DIR/bin:$USER_PROFILE_DIR/ShProg4C:$PATH
 
 # gsutil
-GSUTIL_PATH="/opt/gsutil"
-if [ ! -d "$GSUTIL_PATH" ]; then
-    echo "Warning: gsutil is not found in $GSUTIL_PATH"
-fi
-PATH=$GSUTIL_PATH:$PATH
+#GSUTIL_PATH="/opt/gsutil"
+#if [ ! -d "$GSUTIL_PATH" ]; then
+#    echo "Warning: gsutil is not found in $GSUTIL_PATH"
+#fi
+#PATH=$GSUTIL_PATH:$PATH
 
 # cuda
-CUDA_PATH="/usr/local/cuda"
-if [ ! -d "$CUDA_PATH" ]; then
-    echo "Warning: cuda is not found in $CUDA_PATH"
-fi
-PATH=$CUDA_PATH/bin:$PATH
+#CUDA_PATH="/usr/local/cuda"
+#if [ ! -d "$CUDA_PATH" ]; then
+#    echo "Warning: cuda is not found in $CUDA_PATH"
+#fi
+#PATH=$CUDA_PATH/bin:$PATH
 
 
 # Local ld path
