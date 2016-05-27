@@ -10,6 +10,11 @@ SCRIPT_PATH=$(${GNU}readlink -f $0)
 SCRIPT_DIR=$(dirname ${SCRIPT_PATH})
 ADDITIONAl_BASH_PROFILE=${SCRIPT_DIR}/bash_profile
 
+if [ ! -f $BASH_PROFILE ]; then
+    echo "$BASH_PROFILE doesn't exist! Created it!"
+    touch $BASH_PROFILE
+fi
+
 if [ ! -f $ADDITIONAl_BASH_PROFILE ]; then
     echo "Warning: $ADDITIONAl_BASH_PROFILE doesn't exist!"
 fi
