@@ -2,10 +2,21 @@
 #
 # Setup user profile
 
+if [ ! -f os.sh ]; then
+    echo "Error: os.h doesn't exist!"
+    exit 1
+fi
 source os.sh
+PROFILE_DIR=$(dirname $(${GNU}readlink -f $0))
+ln -sf $PROFILE_DIR/os.sh $HOME/.os.sh
 
 # setup bash 
-source $PROFILE_DIR/setup_bash
+SETUP_BASH=$PROFILE_DIR/setup_bash 
+if [ ! -x $SETUP_BASH ]; then
+    echo "Error: $SETUP_BASH doesn't exist!"
+    exit 1
+fi
+$PROFILE_DIR/setup_bash
 
 #vim
 echo "Setup vim"
@@ -20,21 +31,6 @@ ln -sf $PROFILE_DIR/mercurial/.hgrc $HOME/.hgrc
 #git
 echo "Setup git"
 ln -sf $PROFILE_DIR/git/.gitconfig $HOME/.gitconfig  
-
-#indent
-echo "Setup indent"
-ln -sf $PROFILE_DIR/indent/.indent.pro $HOME/.indent.pro  
-
-#astyle
-echo "Setup astyle"
-ln -sf $PROFILE_DIR/astyle/.astylerc $HOME/.astylerc  
-#ibus-cloud-pinyin
-echo "Setup ibus-cloud-pinyin"
-USER_CLOUD_PINYIN_PATH=${XDG_CONFIG_HOME:-$HOME/.config}/ibus/cloud-pinyin
-if [ ! -e $USER_CLOUD_PINYIN_PATH ]; then
-    mkdir -p $USER_CLOUD_PINYIN_PATH
-fi
-ln -sf $PROFILE_DIR/ibus/cloud-pinyin/config.lua $USER_CLOUD_PINYIN_PATH/config.lua
 
 #ctags
 echo "Setup ctags"

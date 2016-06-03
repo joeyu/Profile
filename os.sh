@@ -6,7 +6,7 @@
 # gnu tools for OS X requires prefix 'g'
 OS=${OSTYPE//[0-9.]/}
 GNU=
-if [[ "$OS" == "darwin" ]]; then
+if [ "$OS" == "darwin" ]; then
     # Checks "brew install coreutils"
     eval "brew list | grep coreutils > /dev/null"
     if [ $? != 0 ]; then
@@ -15,11 +15,4 @@ if [[ "$OS" == "darwin" ]]; then
     fi
 
     GNU=g
-fi
-
-PROFILE_DIR=$(dirname $(${GNU}readlink -f $0))
-SETUP_BASH=$PROFILE_DIR/setup_bash 
-if [ ! -x $SETUP_BASH ]; then
-    echo "Error: $SETUP_BASH doesn't exist!"
-    exit 1
 fi

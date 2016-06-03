@@ -3,30 +3,21 @@
 # Setup bash .profile
 
 source os.sh
-
-BASH_PROFILE=$HOME/.profile
-BASH_ALIASES=$HOME/.bash_aliases
+PROFILE_DIR=$(dirname $(${GNU}readlink -f $0))
 ADDITIONAl_BASH_PROFILE=${PROFILE_DIR}/bash_profile
-ADDITIONAl_BASH_ALIASES=${PROFILE_DIR}/bash_aliases
 if [ ! -f $ADDITIONAl_BASH_PROFILE ]; then
     echo "Error: $ADDITIONAl_BASH_PROFILE doesn't exist!"
     exit 1
 fi
 
+BASH_PROFILE=$HOME/.profile
 # Create .profile if non-existing
 if [ ! -f $BASH_PROFILE ]; then
     echo "$BASH_PROFILE doesn't exist! Created it!"
     touch $BASH_PROFILE
 fi
-echo -e "\n#Envirnment variables set by $SETUP_BASH">>$BASH_PROFILE
+#Append the bash_profile to .profile
+echo -e "\n#Envirnment variables set by $PROFILE_DIR/setup_bash">>$BASH_PROFILE
 echo ". $ADDITIONAl_BASH_PROFILE">>$BASH_PROFILE
 echo "Modified $BASH_PROFILE to include $ADDITIONAl_BASH_PROFILE"
 
-# bash .bash_aliases
-if [ ! -f $BASH_ALIASES ]; then
-    echo "$BASH_ALIASES doesn't exist! Created it!"
-    touch $BASH_ALIASES
-fi
-echo -e "\n#Envirnment variables set by $SETUP_BASH">>$BASH_ALIASES
-echo ". $ADDITIONAl_BASH_ALIASES">>$BASH_ALIASES
-echo "Modified $BASH_ALIASES to include $ADDITIONAl_BASH_ALIASES"
