@@ -1,0 +1,6 @@
+[submodule "ShProg4C"]
+	path = ShProg4C
+	url = git://github.com/joeyu/ShProg4C.git
+[submodule "vim/.vim/bundle/nerdtree"]
+	path = vim/.vim/bundle/nerdtree
+	url = https://github.com/scrooloose/nerdtree.git
