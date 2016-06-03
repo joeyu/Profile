@@ -23,7 +23,7 @@ fi
 #PATH=${ECLIPSE_HOME}:$PATH
 
 #Android SDK
-ANDROID_SDK_HOME="/opt/android-sdk-linux_x86"
+ANDROID_SDK_HOME="/opt/android-sdk"
 if [ ! -d "$ANDROID_SDK_HOME" ]; then
     echo "Warning: android SDK is not found in $ANDROID_SDK_HOME"
 fi
