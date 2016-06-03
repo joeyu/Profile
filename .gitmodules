@@ -1,6 +1,0 @@
-[submodule "ShProg4C"]
-	path = ShProg4C
-	url = git://github.com/joeyu/ShProg4C.git
-[submodule "vim/.vim/bundle/vim-jsbeautify"]
-	path = vim/.vim/bundle/vim-jsbeautify
-	url = https://github.com/maksimr/vim-jsbeautify.git
