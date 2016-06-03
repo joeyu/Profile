@@ -7,6 +7,7 @@ PROFILE_DIR=$(dirname $(${GNU}readlink -f $HOME/.os.sh))
 if [ "$OS" == "darwin" ]; then
     alias ls="ls -G"
     alias ll="ls -la"
+    alias la="ls -a"
 fi
 
 #Android SDK
