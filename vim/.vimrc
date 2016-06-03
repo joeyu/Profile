@@ -91,4 +91,4 @@ let g:cssbeautify = {'indent_size': 4, 'indent_char': ' '}
   " for css or scss
   autocmd FileType css noremap <buffer> <c-f> :call CSSBeautify()<cr>
 
-
+execute pathogen#infect()
