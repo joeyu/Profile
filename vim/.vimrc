@@ -56,9 +56,9 @@ if filereadable("/etc/vim/vimrc.local")
 endif
 
 set tabstop=8
-set softtabstop=4
-set shiftwidth=4
-set expandtab
+set softtabstop=0
+set shiftwidth=0
+set noexpandtab
 set nobackup
 set nu
 set smartindent
