@@ -7,3 +7,6 @@
 [submodule "vim/vim-pathogen"]
 	path = vim/vim-pathogen
 	url = https://github.com/tpope/vim-pathogen.git
+[submodule "vim/.vim/bundle/vim-tags"]
+	path = vim/.vim/bundle/vim-tags
+	url = https://github.com/szw/vim-tags.git
