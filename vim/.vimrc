@@ -92,3 +92,7 @@ let g:cssbeautify = {'indent_size': 4, 'indent_char': ' '}
   autocmd FileType css noremap <buffer> <c-f> :call CSSBeautify()<cr>
 
 execute pathogen#infect()
+
+
+" Map `\s` to replace the current word
+:nnoremap <Leader>s :%s/\<<C-r><C-w>\>/
