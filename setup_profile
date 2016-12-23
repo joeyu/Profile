@@ -23,6 +23,12 @@ echo "Setup vim"
 ln -sf $PROFILE_DIR/vim/.vimrc $HOME/.vimrc  
 ln -sf $PROFILE_DIR/vim/.gvimrc $HOME/.gvimrc  
 ln -sfn $PROFILE_DIR/vim/.vim $HOME/.vim  
+# Checks if js-beautify exists
+js-beautify -v 2>/dev/null
+if [ $? != 0 ]; then
+    echo "[WARNING] 'js-beautify' used by vim for beautifying js/html files) is not installed."
+    echo "          You could install 'node.js', 'npm' and 'js-beautify'
+fi
 
 #mercurial
 echo "Setup mercurial"
