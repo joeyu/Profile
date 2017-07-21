@@ -16,3 +16,6 @@
 [submodule "vim/.vim/bundle/editorconfig-vim"]
 	path = vim/.vim/bundle/editorconfig-vim
 	url = https://github.com/editorconfig/editorconfig-vim.git
+[submodule "vim/.vim/bundle/vim-cmake-syntax"]
+	path = vim/.vim/bundle/vim-cmake-syntax
+	url = git://github.com/pboettch/vim-cmake-syntax.git
