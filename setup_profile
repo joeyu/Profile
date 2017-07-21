@@ -27,7 +27,7 @@ ln -sfn $PROFILE_DIR/vim/.vim $HOME/.vim
 js-beautify -v 2>/dev/null
 if [ $? != 0 ]; then
     echo "[WARNING] 'js-beautify' used by vim for beautifying js/html files) is not installed."
-    echo "          You could install 'node.js', 'npm' and 'js-beautify'"
+    echo "          You could install 'node.js', 'npm' and 'js-beautify'."
 fi
 
 #mercurial
