@@ -47,7 +47,6 @@ set incsearch		" Incremental search
 "set autowrite		" Automatically save before commands like :next and :make
 "set hidden             " Hide buffers when they are abandoned
 set mouse=a		" Enable mouse usage (all modes) in terminals
-set smartindent
 
 " Source a global configuration file if available
 " XXX Deprecated, please move your changes here in /etc/vim/vimrc
@@ -55,14 +54,17 @@ if filereadable("/etc/vim/vimrc.local")
   source /etc/vim/vimrc.local
 endif
 
+" Tab settings
 set tabstop=8
-set softtabstop=0
-set shiftwidth=0
-set noexpandtab
+set expandtab
+set softtabstop=4
+set shiftwidth=4
+set smarttab
+set smartindent
+
+
 set nobackup
 set nu
-set smartindent
-"colorscheme torte
 
 "omnicppcomplete
 set nocp
@@ -74,8 +76,10 @@ filetype plugin on
 :set updatetime=800
 " :au! CursorHold *.[ch] nested exe "silent! botright ptag " . expand("<cword>")
 
-" Taglist
+" Toggle Taglist
 nnoremap <silent> <F8> :TlistToggle<CR>
+
+" Toggle NERDTree
 nnoremap <silent> <F7> :NERDTree<CR>
 
 "let g:jsbeautify = {'indent_size': 4, 'indent_char': '\t'}
