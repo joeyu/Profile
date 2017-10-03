@@ -26,7 +26,7 @@ export ANDROID_NDK_ROOT=${ANDROID_NDK_HOME}
 #golang
 export GOROOT="/opt/go"
 if [ ! -d "$GOROOT" ]; then
-    echo "Warning: the `go` tooltain is not found in $GOROOT"
+    echo "Warning: the 'go' tooltain is not found in $GOROOT"
 fi
 PATH=$GOROOT/bin:$PATH
 export GOPATH=$HOME/mygo
@@ -35,7 +35,7 @@ PATH=${GOPATH//://bin:}/bin:$PATH
 #llvm
 export LLVM_ROOT="/opt/llvm"
 if [ ! -d "$LLVM_ROOT" ]; then
-    echo "Warning: the `llvm` tooltain is not found in $LLVM_ROOT"
+    echo "Warning: the 'clang' tooltain is not found in $LLVM_ROOT"
 fi
 PATH=$LLVM_ROOT/bin:$PATH
 
