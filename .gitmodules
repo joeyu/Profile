@@ -1,21 +1,3 @@
 [submodule "ShProg4C"]
 	path = ShProg4C
 	url = git://github.com/joeyu/ShProg4C.git
-[submodule "vim/.vim/bundle/nerdtree"]
-	path = vim/.vim/bundle/nerdtree
-	url = https://github.com/scrooloose/nerdtree.git
-[submodule "vim/vim-pathogen"]
-	path = vim/vim-pathogen
-	url = https://github.com/tpope/vim-pathogen.git
-[submodule "vim/.vim/bundle/vim-tags"]
-	path = vim/.vim/bundle/vim-tags
-	url = https://github.com/szw/vim-tags.git
-[submodule "vim/.vim/bundle/vim-jsbeautify"]
-	path = vim/.vim/bundle/vim-jsbeautify
-	url = https://github.com/maksimr/vim-jsbeautify.git
-[submodule "vim/.vim/bundle/editorconfig-vim"]
-	path = vim/.vim/bundle/editorconfig-vim
-	url = https://github.com/editorconfig/editorconfig-vim.git
-[submodule "vim/.vim/bundle/vim-cmake-syntax"]
-	path = vim/.vim/bundle/vim-cmake-syntax
-	url = git://github.com/pboettch/vim-cmake-syntax.git
