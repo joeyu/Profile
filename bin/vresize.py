@@ -16,10 +16,10 @@ def convert(infile_str, target_size, codec):
     if infile.suffix == ".mp4":
         targetfile = infile.stem + '2' + infile.suffix
         cmd = f"ffprobe -v error -select_streams v:0 -show_entries stream=bit_rate -of default=noprint_wrappers=1:nokey=1".split()
-        cmd.append({infile_str})
+        cmd.append(infile_str)
         infile_bv = int(subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True).stdout.rstrip('\n'))
         cmd = f"ffprobe -v error -select_streams a:0 -show_entries stream=bit_rate -of default=noprint_wrappers=1:nokey=1".split()
-        cmd.append({infile_str})
+        cmd.append(infile_str)
         infile_ba = int(subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True).stdout.rstrip('\n'))
         target_ba = infile_ba
         if target_ba > 6.4e4:
