@@ -10,7 +10,7 @@ import sys
 import subprocess
 
 
-def convert(infile_str, target_size, codec):
+def convert(infile_str, target_size, codec, audio_downmix):
     infile = Path(infile_str)
     infile_size = infile.stat().st_size
     if infile.suffix == ".mp4":
@@ -22,7 +22,7 @@ def convert(infile_str, target_size, codec):
         cmd.append(infile_str)
         infile_ba = int(subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True).stdout.rstrip('\n'))
         target_ba = infile_ba
-        if target_ba > 6.4e4:
+        if target_ba > 6.4e4 and audio_downmix:
              target_ba = int(6.4e4)
         target_bv = target_size * (infile_ba + infile_bv) // infile_size - target_ba
     elif infile.suffix == ".webm":
@@ -51,16 +51,21 @@ def convert(infile_str, target_size, codec):
     cmd = f"ffmpeg -i".split() + [infile_str] + f"-threads 4 -c:v {codec} -b:v {target_bv} {codec_pass2} -b:a {target_ba} -y".split() + [str(targetfile)]
     subprocess.run(cmd, check = True)
 
-if len(sys.argv) <= 4:
+if len(sys.argv) <= 4 and len(sys.argv) > 1:
     infile = sys.argv[1] 
     codec = "libx264"
     target_size = 2.46e7
+    audio_downmix = True
     for arg in sys.argv[2:]:
         if arg in ("libx265", "libx264"):
             codec = arg
+        if arg == "--nad":
+            audio_downmix = False
         elif arg[-1] in ("M", "m"):
-            target_size = int(arg[0:-1]) * 1e6
+            target_size = float(arg[0:-1]) * 1e6
+        else:
+            print(f"Wrong arguments: {arg}")
+    convert(infile, target_size, codec, audio_downmix)
 else:
-    print(f"Usage: {sys.argv[0]} <infile> [target_size] [codec]")
+    print(f"Usage: {sys.argv[0]} <infile> [target_size] [codec] [--nad]")
 
-convert(infile, target_size, codec)
