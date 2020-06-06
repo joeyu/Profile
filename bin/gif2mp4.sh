@@ -1,20 +1,6 @@
 #!/bin/bash
 
-convert() {
-	local infile="$1"
-	local outfile="${infile%.gif}.mp4"
-	ffmpeg -i "${infile}" -movflags faststart -pix_fmt yuv420p -vf "scale=trunc(iw/2)*2:trunc(ih/2)*2" "${outfile}" 
-	return $?
-}
+gif_fn=$1
+mp4_fn="${gif_fn%.*}.mp4"
 
-if [[ -z $1 ]]; then
-	for i in *.gif; do
-		if [[ ! -f "{$i%.gif}.mp4" ]]; then
-			convert "$i"
-		fi
-	done
-else
-	convert "$1"
-fi
-
-
+ffmpeg -r 30 -i $gif_fn -movflags faststart -pix_fmt yuv420p -vf "scale=trunc(iw/2)*2:trunc(ih/2)*2" $mp4_fn
