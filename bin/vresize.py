@@ -13,7 +13,7 @@ import subprocess
 def convert(infile_str, target_size, codec, audio_downmix):
     infile = Path(infile_str)
     infile_size = infile.stat().st_size
-    if infile.suffix == ".mp4":
+    if infile.suffix in (".mp4", ".MP4"):
         targetfile = infile.stem + '2' + infile.suffix
         cmd = f"ffprobe -v error -select_streams v:0 -show_entries stream=bit_rate -of default=noprint_wrappers=1:nokey=1".split()
         cmd.append(infile_str)
@@ -34,6 +34,9 @@ def convert(infile_str, target_size, codec, audio_downmix):
         #print(f"duration: {duration}")
         target_ba = int(6.4e4)
         target_bv = target_size * 8 // duration - target_ba
+    else:
+        print(f"{infile_str} file type is not supported!")
+        sys.exit()
     #print(f"infile_size: {infile_size}")
     #print(f"target_size: {target_size}")
     #print(f"infile_ba: {infile_ba}")
@@ -43,7 +46,7 @@ def convert(infile_str, target_size, codec, audio_downmix):
     #return
     codec_pass1 = "-x265-params pass=1:pools=4"
     codec_pass2 = "-x265-params pass=2:pools=4"
-    if codec is "libx264":
+    if codec == "libx264":
         codec_pass1 = "-pass 1"
         codec_pass2 = "-pass 2"
     cmd = f"ffmpeg -i".split() + [infile_str] + f"-threads 4 -c:v {codec} -b:v {target_bv} {codec_pass1} -f mp4 -an /dev/null -y".split()
